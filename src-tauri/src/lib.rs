@@ -39,16 +39,15 @@ pub fn run() {
 
             // Check for updates on startup (with delay) and periodically
             let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
+            std::thread::spawn(move || {
                 // Small delay to let the app fully initialize
-                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-                tray::check_for_updates_startup(&app_handle).await;
+                std::thread::sleep(std::time::Duration::from_secs(2));
+                tauri::async_runtime::block_on(tray::check_for_updates_startup(&app_handle));
 
                 // Check for updates every hour
-                let mut interval = tokio::time::interval(std::time::Duration::from_secs(60 * 60));
                 loop {
-                    interval.tick().await;
-                    tray::check_for_updates_startup(&app_handle).await;
+                    std::thread::sleep(std::time::Duration::from_secs(60 * 60));
+                    tauri::async_runtime::block_on(tray::check_for_updates_startup(&app_handle));
                 }
             });
 
