@@ -139,11 +139,11 @@ Will support both X11 and Wayland compositors through conditional compilation.
 - [x] Project setup
 - [x] Core window management trait
 - [x] macOS implementation (Accessibility API)
-- [x] Windows implementation (Win32 API)
+- [ ] Windows implementation (Win32 API)
 - [x] Global hotkey registration
 - [x] System tray integration
 - [x] Multi-monitor support
-- [ ] Settings UI
+- [x] Settings UI
 - [ ] Linux support (X11)
 - [ ] Linux support (Wayland)
 - [ ] Custom shortcut configuration UI
