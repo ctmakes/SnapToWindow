@@ -146,7 +146,13 @@ function App() {
   const checkAccessibility = async () => {
     try {
       const enabled = await invoke<boolean>("check_accessibility");
-      setAccessibilityEnabled(enabled);
+      setAccessibilityEnabled((prev) => {
+        // Refresh tray when accessibility status changes
+        if (prev !== null && prev !== enabled) {
+          invoke("refresh_tray").catch(console.error);
+        }
+        return enabled;
+      });
     } catch (e) {
       console.error("Failed to check accessibility:", e);
       setAccessibilityEnabled(false);

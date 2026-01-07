@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::tray;
 use crate::window_manager::{SnapPosition, WindowManager};
 use tauri_plugin_autostart::ManagerExt;
 
@@ -68,4 +69,9 @@ pub fn open_accessibility_settings() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn refresh_tray(app: tauri::AppHandle) -> Result<(), String> {
+    tray::refresh_tray(&app).map_err(|e| e.to_string())
 }

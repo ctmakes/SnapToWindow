@@ -6,6 +6,8 @@ use tauri::{
     AppHandle, Manager,
 };
 
+const TRAY_ID: &str = "main-tray";
+
 #[cfg(target_os = "macos")]
 fn check_accessibility() -> bool {
     #[link(name = "ApplicationServices", kind = "framework")]
@@ -244,7 +246,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let tray_icon =
         Image::from_bytes(include_bytes!("../icons/tray.png")).expect("Failed to load tray icon");
 
-    let mut builder = TrayIconBuilder::new()
+    let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .icon(tray_icon)
         .icon_as_template(true)
         .menu(&menu)
@@ -312,4 +314,15 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         .build(app)?;
 
     Ok(())
+}
+
+/// Refresh the tray to update accessibility status
+pub fn refresh_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    // Remove existing tray by dropping it
+    if let Some(tray) = app.remove_tray_by_id(TRAY_ID) {
+        drop(tray);
+    }
+
+    // Rebuild the tray with current accessibility status
+    setup_tray(app)
 }

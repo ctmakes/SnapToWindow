@@ -51,6 +51,7 @@ pub fn run() {
             commands::save_config,
             commands::check_accessibility,
             commands::open_accessibility_settings,
+            commands::refresh_tray,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
