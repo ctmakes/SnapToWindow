@@ -8,6 +8,8 @@ mod hotkeys;
 mod tray;
 mod window_manager;
 
+use tauri::Manager;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -22,6 +24,13 @@ pub fn run() {
             hotkeys::register_hotkeys(app.handle())?;
 
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            // Hide window instead of closing - app stays in tray
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                window.hide().ok();
+                api.prevent_close();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::snap_window,
