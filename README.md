@@ -15,25 +15,25 @@ Built with **Tauri**, **Rust**, and **TypeScript** for native performance and a 
 
 ## Supported Window Positions
 
-| Action | Default Shortcut |
-|--------|------------------|
-| Left Half | `Ctrl + Alt + Left` |
-| Right Half | `Ctrl + Alt + Right` |
-| Top Half | `Ctrl + Alt + Up` |
-| Bottom Half | `Ctrl + Alt + Down` |
-| Top Left Quarter | `Ctrl + Alt + U` |
-| Top Right Quarter | `Ctrl + Alt + I` |
-| Bottom Left Quarter | `Ctrl + Alt + J` |
-| Bottom Right Quarter | `Ctrl + Alt + K` |
-| Left Third | `Ctrl + Alt + D` |
-| Center Third | `Ctrl + Alt + F` |
-| Right Third | `Ctrl + Alt + G` |
-| Left Two Thirds | `Ctrl + Alt + E` |
-| Right Two Thirds | `Ctrl + Alt + R` |
-| Center | `Ctrl + Alt + C` |
-| Maximize | `Ctrl + Alt + Enter` |
+| Action | Windows | macOS |
+|--------|---------|-------|
+| Left Half | `Ctrl + Alt + Left` | `⌃ + ⌥ + Left` |
+| Right Half | `Ctrl + Alt + Right` | `⌃ + ⌥ + Right` |
+| Top Half | `Ctrl + Alt + Up` | `⌃ + ⌥ + Up` |
+| Bottom Half | `Ctrl + Alt + Down` | `⌃ + ⌥ + Down` |
+| Top Left Quarter | `Ctrl + Alt + U` | `⌃ + ⌥ + U` |
+| Top Right Quarter | `Ctrl + Alt + I` | `⌃ + ⌥ + I` |
+| Bottom Left Quarter | `Ctrl + Alt + J` | `⌃ + ⌥ + J` |
+| Bottom Right Quarter | `Ctrl + Alt + K` | `⌃ + ⌥ + K` |
+| Left Third | `Ctrl + Alt + D` | `⌃ + ⌥ + D` |
+| Center Third | `Ctrl + Alt + F` | `⌃ + ⌥ + F` |
+| Right Third | `Ctrl + Alt + G` | `⌃ + ⌥ + G` |
+| Left Two Thirds | `Ctrl + Alt + E` | `⌃ + ⌥ + E` |
+| Right Two Thirds | `Ctrl + Alt + R` | `⌃ + ⌥ + R` |
+| Center | `Ctrl + Alt + C` | `⌃ + ⌥ + C` |
+| Maximize | `Ctrl + Alt + Enter` | `⌃ + ⌥ + Enter` |
 
-> **Note:** On macOS, `Alt` is the `Option` key.
+> **Note:** ⌃ = Control, ⌥ = Option
 
 ## Architecture
 
