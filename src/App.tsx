@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getVersion } from "@tauri-apps/api/app";
 import { check, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -152,6 +153,27 @@ function useUpdater() {
   const [error, setError] = useState<string | null>(null);
   const [update, setUpdate] = useState<Update | null>(null);
 
+  // Listen for update events from backend (tray menu or periodic checks)
+  useEffect(() => {
+    const unlisten = listen<string>("update-available", async (event) => {
+      setVersion(event.payload);
+      setAvailable(true);
+      // Fetch the update object so we can install it
+      try {
+        const result = await check();
+        if (result) {
+          setUpdate(result);
+        }
+      } catch (e) {
+        console.log("Failed to fetch update object:", e);
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
   const checkForUpdates = async () => {
     setChecking(true);
     setError(null);
@@ -161,8 +183,11 @@ function useUpdater() {
         setAvailable(true);
         setVersion(result.version);
         setUpdate(result);
+        // Notify backend to update tray
+        invoke("set_update_available", { available: true, version: result.version }).catch(console.error);
       } else {
         setAvailable(false);
+        invoke("set_update_available", { available: false, version: null }).catch(console.error);
       }
     } catch (e) {
       // Silently fail - update check failures (private repo, no releases, network issues)

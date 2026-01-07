@@ -526,3 +526,20 @@ pub fn refresh_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+/// Set update availability from frontend and rebuild tray
+pub fn set_update_available(app: &AppHandle, available: bool, version: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let was_available = UPDATE_AVAILABLE.load(Ordering::SeqCst);
+    UPDATE_AVAILABLE.store(available, Ordering::SeqCst);
+    *UPDATE_VERSION.lock().unwrap() = version;
+
+    // Rebuild tray if update state changed
+    if available != was_available {
+        if let Some(tray) = app.remove_tray_by_id(TRAY_ID) {
+            drop(tray);
+        }
+        setup_tray(app)?;
+    }
+
+    Ok(())
+}

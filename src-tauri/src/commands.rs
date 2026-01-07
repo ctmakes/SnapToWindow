@@ -75,3 +75,8 @@ pub fn open_accessibility_settings() -> Result<(), String> {
 pub fn refresh_tray(app: tauri::AppHandle) -> Result<(), String> {
     tray::refresh_tray(&app).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn set_update_available(app: tauri::AppHandle, available: bool, version: Option<String>) -> Result<(), String> {
+    tray::set_update_available(&app, available, version).map_err(|e| e.to_string())
+}
