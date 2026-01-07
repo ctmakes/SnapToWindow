@@ -40,21 +40,21 @@ impl Default for Config {
 impl Default for ShortcutConfig {
     fn default() -> Self {
         Self {
-            left_half: "CommandOrControl+Alt+Left".to_string(),
-            right_half: "CommandOrControl+Alt+Right".to_string(),
-            top_half: "CommandOrControl+Alt+Up".to_string(),
-            bottom_half: "CommandOrControl+Alt+Down".to_string(),
-            top_left: "CommandOrControl+Alt+U".to_string(),
-            top_right: "CommandOrControl+Alt+I".to_string(),
-            bottom_left: "CommandOrControl+Alt+J".to_string(),
-            bottom_right: "CommandOrControl+Alt+K".to_string(),
-            left_third: "CommandOrControl+Alt+D".to_string(),
-            center_third: "CommandOrControl+Alt+F".to_string(),
-            right_third: "CommandOrControl+Alt+G".to_string(),
-            left_two_thirds: "CommandOrControl+Alt+E".to_string(),
-            right_two_thirds: "CommandOrControl+Alt+R".to_string(),
-            center: "CommandOrControl+Alt+C".to_string(),
-            maximize: "CommandOrControl+Alt+Enter".to_string(),
+            left_half: "Control+Alt+Left".to_string(),
+            right_half: "Control+Alt+Right".to_string(),
+            top_half: "Control+Alt+Up".to_string(),
+            bottom_half: "Control+Alt+Down".to_string(),
+            top_left: "Control+Alt+U".to_string(),
+            top_right: "Control+Alt+I".to_string(),
+            bottom_left: "Control+Alt+J".to_string(),
+            bottom_right: "Control+Alt+K".to_string(),
+            left_third: "Control+Alt+D".to_string(),
+            center_third: "Control+Alt+F".to_string(),
+            right_third: "Control+Alt+G".to_string(),
+            left_two_thirds: "Control+Alt+E".to_string(),
+            right_two_thirds: "Control+Alt+R".to_string(),
+            center: "Control+Alt+C".to_string(),
+            maximize: "Control+Alt+Enter".to_string(),
         }
     }
 }
