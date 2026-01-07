@@ -23,9 +23,6 @@ pub enum WindowManagerError {
 
     #[error("Failed to move window: {0}")]
     MoveError(String),
-
-    #[error("Platform not supported")]
-    PlatformNotSupported,
 }
 
 pub type Result<T> = std::result::Result<T, WindowManagerError>;

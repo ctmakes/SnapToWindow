@@ -57,7 +57,6 @@ extern "C" {
     ) -> AXError;
     fn AXValueCreate(value_type: AXValueType, value: *const c_void) -> AXValueRef;
     fn AXValueGetValue(value: AXValueRef, value_type: AXValueType, value_out: *mut c_void) -> bool;
-    fn AXIsProcessTrusted() -> bool;
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]
@@ -77,11 +76,6 @@ pub struct MacOSManager;
 impl MacOSManager {
     pub fn new() -> Self {
         Self
-    }
-
-    /// Check if we have accessibility permissions
-    pub fn is_trusted() -> bool {
-        unsafe { AXIsProcessTrusted() }
     }
 
     /// Get the PID of the frontmost application

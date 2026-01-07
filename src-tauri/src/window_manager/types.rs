@@ -20,6 +20,7 @@ impl Rect {
 pub struct Window {
     /// Platform-specific window handle.
     pub handle: WindowHandle,
+    #[allow(dead_code)]
     pub title: String,
     pub frame: Rect,
 }
@@ -40,6 +41,7 @@ pub enum WindowHandle {
 /// Represents a display/monitor.
 #[derive(Debug, Clone)]
 pub struct Display {
+    #[allow(dead_code)]
     pub name: String,
     /// The full bounds of the display.
     pub bounds: Rect,

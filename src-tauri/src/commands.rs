@@ -21,8 +21,6 @@ pub fn save_config(config: Config) -> Result<(), String> {
 pub fn check_accessibility() -> bool {
     #[cfg(target_os = "macos")]
     {
-        use std::ffi::c_void;
-
         #[link(name = "ApplicationServices", kind = "framework")]
         extern "C" {
             fn AXIsProcessTrusted() -> bool;
