@@ -1,10 +1,10 @@
 [package]
 name = "snaptowindow"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "A cross-platform window management application"
 license = "MIT"
-repository = "https://github.com/chitaoling/snaptowindow"
+repository = "https://github.com/ctmakes/snaptowindow"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
