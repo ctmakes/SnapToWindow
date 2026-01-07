@@ -68,6 +68,22 @@ jobs:
 
           rm certificate.p12
 
+      - name: Debug signing key
+        run: |
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY is set (length: ${#TAURI_SIGNING_PRIVATE_KEY})"
+          else
+            echo "TAURI_SIGNING_PRIVATE_KEY is NOT set"
+          fi
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is set (length: ${#TAURI_SIGNING_PRIVATE_KEY_PASSWORD})"
+          else
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is NOT set"
+          fi
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         timeout-minutes: 30
