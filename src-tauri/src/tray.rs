@@ -109,35 +109,35 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         "left_third",
         "Left Third",
         accessibility_enabled,
-        None::<&str>,
+        Some("ctrl+alt+d"),
     )?;
     let center_third = MenuItem::with_id(
         app,
         "center_third",
         "Center Third",
         accessibility_enabled,
-        None::<&str>,
+        Some("ctrl+alt+f"),
     )?;
     let right_third = MenuItem::with_id(
         app,
         "right_third",
         "Right Third",
         accessibility_enabled,
-        None::<&str>,
+        Some("ctrl+alt+g"),
     )?;
     let left_two_thirds = MenuItem::with_id(
         app,
         "left_two_thirds",
         "Left Two Thirds",
         accessibility_enabled,
-        None::<&str>,
+        Some("ctrl+alt+e"),
     )?;
     let right_two_thirds = MenuItem::with_id(
         app,
         "right_two_thirds",
         "Right Two Thirds",
         accessibility_enabled,
-        None::<&str>,
+        Some("ctrl+alt+r"),
     )?;
 
     // Other actions

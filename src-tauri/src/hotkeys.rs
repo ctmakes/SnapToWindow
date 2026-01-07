@@ -16,6 +16,11 @@ pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error
         (&shortcuts.top_right, SnapPosition::TopRight),
         (&shortcuts.bottom_left, SnapPosition::BottomLeft),
         (&shortcuts.bottom_right, SnapPosition::BottomRight),
+        (&shortcuts.left_third, SnapPosition::LeftThird),
+        (&shortcuts.center_third, SnapPosition::CenterThird),
+        (&shortcuts.right_third, SnapPosition::RightThird),
+        (&shortcuts.left_two_thirds, SnapPosition::LeftTwoThirds),
+        (&shortcuts.right_two_thirds, SnapPosition::RightTwoThirds),
         (&shortcuts.center, SnapPosition::Center),
         (&shortcuts.maximize, SnapPosition::Maximize),
     ];

@@ -133,11 +133,11 @@ const quarters: ShortcutItem[] = [
 ];
 
 const thirds: ShortcutItem[] = [
-  { name: "Left Third", shortcut: "—", action: "left_third" },
-  { name: "Center Third", shortcut: "—", action: "center_third" },
-  { name: "Right Third", shortcut: "—", action: "right_third" },
-  { name: "Left ⅔", shortcut: "—", action: "left_two_thirds" },
-  { name: "Right ⅔", shortcut: "—", action: "right_two_thirds" },
+  { name: "Left Third", shortcut: "⌃⌥D", action: "left_third" },
+  { name: "Center Third", shortcut: "⌃⌥F", action: "center_third" },
+  { name: "Right Third", shortcut: "⌃⌥G", action: "right_third" },
+  { name: "Left ⅔", shortcut: "⌃⌥E", action: "left_two_thirds" },
+  { name: "Right ⅔", shortcut: "⌃⌥R", action: "right_two_thirds" },
 ];
 
 function App() {
