@@ -6,32 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  create-release:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get version from tag
-        id: version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: 'SnapToWindow v${{ steps.version.outputs.version }}'
-          body: 'See the assets to download and install this version.'
-          draft: true
-          prerelease: false
-
-  build:
-    needs: create-release
+  release:
     permissions:
       contents: write
     strategy:
@@ -44,9 +19,6 @@ jobs:
           - platform: macos-latest
             args: --target x86_64-apple-darwin
             target: x86_64-apple-darwin
-          - platform: windows-latest
-            args: ''
-            target: x86_64-pc-windows-msvc
 
     runs-on: ${{ matrix.platform }}
 
@@ -108,6 +80,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tagName: v__VERSION__
+          releaseName: 'SnapToWindow v__VERSION__'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
           args: ${{ matrix.args }}
           includeUpdaterJson: true
