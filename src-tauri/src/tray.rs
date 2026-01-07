@@ -1,33 +1,70 @@
 use crate::window_manager::{SnapPosition, WindowManager};
 use tauri::{
+    image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
     AppHandle, Manager,
 };
 
+#[cfg(target_os = "macos")]
+fn check_accessibility() -> bool {
+    #[link(name = "ApplicationServices", kind = "framework")]
+    extern "C" {
+        fn AXIsProcessTrusted() -> bool;
+    }
+    unsafe { AXIsProcessTrusted() }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn check_accessibility() -> bool {
+    true
+}
+
+fn open_accessibility_settings() {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+            .spawn()
+            .ok();
+    }
+}
+
 pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let accessibility_enabled = check_accessibility();
+
+    // Warning item (only shown if accessibility not enabled)
+    let warning = MenuItem::with_id(
+        app,
+        "accessibility_warning",
+        "⚠️ Accessibility Required - Click to Fix",
+        true,
+        None::<&str>,
+    )?;
+    let warning_sep = PredefinedMenuItem::separator(app)?;
+
     // Halves
-    let left_half = MenuItem::with_id(app, "left_half", "Left Half\t\t\t⌃⌥←", true, None::<&str>)?;
-    let right_half = MenuItem::with_id(app, "right_half", "Right Half\t\t\t⌃⌥→", true, None::<&str>)?;
-    let top_half = MenuItem::with_id(app, "top_half", "Top Half\t\t\t⌃⌥↑", true, None::<&str>)?;
-    let bottom_half = MenuItem::with_id(app, "bottom_half", "Bottom Half\t\t⌃⌥↓", true, None::<&str>)?;
+    let left_half = MenuItem::with_id(app, "left_half", "Left Half\t\t\t⌃⌥←", accessibility_enabled, None::<&str>)?;
+    let right_half = MenuItem::with_id(app, "right_half", "Right Half\t\t\t⌃⌥→", accessibility_enabled, None::<&str>)?;
+    let top_half = MenuItem::with_id(app, "top_half", "Top Half\t\t\t⌃⌥↑", accessibility_enabled, None::<&str>)?;
+    let bottom_half = MenuItem::with_id(app, "bottom_half", "Bottom Half\t\t⌃⌥↓", accessibility_enabled, None::<&str>)?;
 
     // Quarters
-    let top_left = MenuItem::with_id(app, "top_left", "Top Left\t\t\t⌃⌥U", true, None::<&str>)?;
-    let top_right = MenuItem::with_id(app, "top_right", "Top Right\t\t\t⌃⌥I", true, None::<&str>)?;
-    let bottom_left = MenuItem::with_id(app, "bottom_left", "Bottom Left\t\t⌃⌥J", true, None::<&str>)?;
-    let bottom_right = MenuItem::with_id(app, "bottom_right", "Bottom Right\t\t⌃⌥K", true, None::<&str>)?;
+    let top_left = MenuItem::with_id(app, "top_left", "Top Left\t\t\t⌃⌥U", accessibility_enabled, None::<&str>)?;
+    let top_right = MenuItem::with_id(app, "top_right", "Top Right\t\t\t⌃⌥I", accessibility_enabled, None::<&str>)?;
+    let bottom_left = MenuItem::with_id(app, "bottom_left", "Bottom Left\t\t⌃⌥J", accessibility_enabled, None::<&str>)?;
+    let bottom_right = MenuItem::with_id(app, "bottom_right", "Bottom Right\t\t⌃⌥K", accessibility_enabled, None::<&str>)?;
 
     // Thirds
-    let left_third = MenuItem::with_id(app, "left_third", "Left Third", true, None::<&str>)?;
-    let center_third = MenuItem::with_id(app, "center_third", "Center Third", true, None::<&str>)?;
-    let right_third = MenuItem::with_id(app, "right_third", "Right Third", true, None::<&str>)?;
-    let left_two_thirds = MenuItem::with_id(app, "left_two_thirds", "Left Two Thirds", true, None::<&str>)?;
-    let right_two_thirds = MenuItem::with_id(app, "right_two_thirds", "Right Two Thirds", true, None::<&str>)?;
+    let left_third = MenuItem::with_id(app, "left_third", "Left Third", accessibility_enabled, None::<&str>)?;
+    let center_third = MenuItem::with_id(app, "center_third", "Center Third", accessibility_enabled, None::<&str>)?;
+    let right_third = MenuItem::with_id(app, "right_third", "Right Third", accessibility_enabled, None::<&str>)?;
+    let left_two_thirds = MenuItem::with_id(app, "left_two_thirds", "Left Two Thirds", accessibility_enabled, None::<&str>)?;
+    let right_two_thirds = MenuItem::with_id(app, "right_two_thirds", "Right Two Thirds", accessibility_enabled, None::<&str>)?;
 
     // Other actions
-    let maximize = MenuItem::with_id(app, "maximize", "Maximize\t\t\t⌃⌥↵", true, None::<&str>)?;
-    let center = MenuItem::with_id(app, "center", "Center\t\t\t\t⌃⌥C", true, None::<&str>)?;
+    let maximize = MenuItem::with_id(app, "maximize", "Maximize\t\t\t⌃⌥↵", accessibility_enabled, None::<&str>)?;
+    let center = MenuItem::with_id(app, "center", "Center\t\t\t\t⌃⌥C", accessibility_enabled, None::<&str>)?;
 
     // Separators
     let sep1 = PredefinedMenuItem::separator(app)?;
@@ -39,44 +76,107 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let settings = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit SnapToWindow", true, None::<&str>)?;
 
-    let menu = Menu::with_items(
-        app,
-        &[
-            // Halves
-            &left_half,
-            &right_half,
-            &top_half,
-            &bottom_half,
-            &sep1,
-            // Quarters
-            &top_left,
-            &top_right,
-            &bottom_left,
-            &bottom_right,
-            &sep2,
-            // Thirds
-            &left_third,
-            &center_third,
-            &right_third,
-            &left_two_thirds,
-            &right_two_thirds,
-            &sep3,
-            // Other
-            &maximize,
-            &center,
-            &sep4,
-            // App controls
-            &settings,
-            &quit,
-        ],
-    )?;
+    let menu = if accessibility_enabled {
+        Menu::with_items(
+            app,
+            &[
+                // Halves
+                &left_half,
+                &right_half,
+                &top_half,
+                &bottom_half,
+                &sep1,
+                // Quarters
+                &top_left,
+                &top_right,
+                &bottom_left,
+                &bottom_right,
+                &sep2,
+                // Thirds
+                &left_third,
+                &center_third,
+                &right_third,
+                &left_two_thirds,
+                &right_two_thirds,
+                &sep3,
+                // Other
+                &maximize,
+                &center,
+                &sep4,
+                // App controls
+                &settings,
+                &quit,
+            ],
+        )?
+    } else {
+        Menu::with_items(
+            app,
+            &[
+                // Warning at top
+                &warning,
+                &warning_sep,
+                // Halves (disabled)
+                &left_half,
+                &right_half,
+                &top_half,
+                &bottom_half,
+                &sep1,
+                // Quarters (disabled)
+                &top_left,
+                &top_right,
+                &bottom_left,
+                &bottom_right,
+                &sep2,
+                // Thirds (disabled)
+                &left_third,
+                &center_third,
+                &right_third,
+                &left_two_thirds,
+                &right_two_thirds,
+                &sep3,
+                // Other (disabled)
+                &maximize,
+                &center,
+                &sep4,
+                // App controls
+                &settings,
+                &quit,
+            ],
+        )?
+    };
 
-    TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+    let tooltip = if accessibility_enabled {
+        "SnapToWindow"
+    } else {
+        "SnapToWindow - ⚠️ Accessibility Required"
+    };
+
+    let icon = Image::from_bytes(include_bytes!("../icons/tray.png"))?;
+
+    let mut builder = TrayIconBuilder::new()
+        .icon(icon)
+        .icon_as_template(true)
         .menu(&menu)
-        .show_menu_on_left_click(true)
+        .tooltip(tooltip)
+        .show_menu_on_left_click(true);
+
+    // Show warning indicator next to icon on macOS when accessibility is disabled
+    if !accessibility_enabled {
+        builder = builder.title("⚠️");
+    }
+
+    builder
         .on_menu_event(|app, event| {
             let position = match event.id.as_ref() {
+                // Accessibility warning
+                "accessibility_warning" => {
+                    open_accessibility_settings();
+                    if let Some(window) = app.get_webview_window("main") {
+                        window.show().ok();
+                        window.set_focus().ok();
+                    }
+                    None
+                }
                 // Halves
                 "left_half" => Some(SnapPosition::LeftHalf),
                 "right_half" => Some(SnapPosition::RightHalf),

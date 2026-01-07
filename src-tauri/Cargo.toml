@@ -10,7 +10,7 @@ repository = "https://github.com/chitaoling/snaptowindow"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-updater = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-global-shortcut = "2"
