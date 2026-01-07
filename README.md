@@ -58,24 +58,6 @@ src-tauri/
 │       └── linux.rs         # Linux implementation (X11/Wayland) [stub]
 ```
 
-### Core Trait
-
-```rust
-pub trait WindowManagerTrait: Send + Sync {
-    /// Get the currently focused window
-    fn get_focused_window(&self) -> Result<Window>;
-
-    /// Move and resize a window to the specified frame
-    fn set_window_frame(&self, window: &Window, frame: Rect) -> Result<()>;
-
-    /// Get the display/monitor containing the focused window
-    fn get_current_display(&self) -> Result<Display>;
-
-    /// Get all available displays
-    fn get_all_displays(&self) -> Result<Vec<Display>>;
-}
-```
-
 ### Tech Stack
 
 | Layer | Technology |
@@ -95,7 +77,7 @@ pub trait WindowManagerTrait: Send + Sync {
 - Platform-specific requirements:
   - **Windows**: Visual Studio Build Tools 2022
   - **macOS**: Xcode Command Line Tools
-  - **Linux**: `build-essential`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`
+  - **Linux**: To be confirmed
 
 ### Setup
 
