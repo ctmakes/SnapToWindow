@@ -35,7 +35,7 @@ pub fn check_accessibility() -> bool {
     #[cfg(target_os = "macos")]
     {
         #[link(name = "ApplicationServices", kind = "framework")]
-        extern "C" {
+        unsafe extern "C" {
             fn AXIsProcessTrusted() -> bool;
         }
 

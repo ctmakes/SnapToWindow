@@ -9,7 +9,7 @@ use tauri::{
 #[cfg(target_os = "macos")]
 fn check_accessibility() -> bool {
     #[link(name = "ApplicationServices", kind = "framework")]
-    extern "C" {
+    unsafe extern "C" {
         fn AXIsProcessTrusted() -> bool;
     }
     unsafe { AXIsProcessTrusted() }

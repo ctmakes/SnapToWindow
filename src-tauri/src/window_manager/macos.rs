@@ -49,7 +49,7 @@ struct CGRect {
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     fn AXUIElementCreateSystemWide() -> AXUIElementRef;
     fn AXUIElementCreateApplication(pid: i32) -> AXUIElementRef;
     fn AXUIElementCopyAttributeValue(
@@ -67,16 +67,16 @@ extern "C" {
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     fn CGRectContainsPoint(rect: CGRect, point: CGPoint) -> bool;
 }
 
 #[link(name = "AppKit", kind = "framework")]
-extern "C" {}
+unsafe extern "C" {}
 
 // NSScreen bindings for work area
 #[link(name = "Foundation", kind = "framework")]
-extern "C" {}
+unsafe extern "C" {}
 
 // Store the last known frontmost app PID for fallback when tray menu steals focus
 static LAST_FRONTMOST_PID: AtomicI32 = AtomicI32::new(0);

@@ -24,7 +24,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"]
+    "icon": ["icons/tray@2x.png", "icons/icon.icns", "icons/icon.ico"]
   },
   "plugins": {
     "updater": {
