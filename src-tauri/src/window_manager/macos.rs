@@ -297,9 +297,11 @@ impl MacOSManager {
             for screen in screens.iter() {
                 let device_desc = screen.deviceDescription();
 
-                if let Some(screen_number_obj) = device_desc.objectForKey(&screen_number_key) {
-                    // Use msg_send to call unsignedIntValue on the NSNumber object
-                    let num: u32 = msg_send![&*screen_number_obj as &AnyObject, unsignedIntValue];
+                // Use msg_send for dictionary lookup to avoid type issues
+                let screen_number_obj: *mut AnyObject = msg_send![&*device_desc, objectForKey: &*screen_number_key];
+
+                if !screen_number_obj.is_null() {
+                    let num: u32 = msg_send![screen_number_obj, unsignedIntValue];
 
                     if num == display_id {
                         let visible_frame = screen.visibleFrame();

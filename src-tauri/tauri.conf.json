@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "SnapToWindow",
-        "width": 600,
-        "height": 400,
+        "width": 680,
+        "height": 500,
         "resizable": true,
         "visible": false
       }
