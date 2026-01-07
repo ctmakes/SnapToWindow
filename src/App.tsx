@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app";
 import { check, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 
@@ -142,8 +143,6 @@ const thirds: ShortcutItem[] = [
   { name: "Right ⅔", shortcut: "⌃⌥R", action: "right_two_thirds" },
 ];
 
-const APP_VERSION = "0.1.1";
-
 function useUpdater() {
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState(false);
@@ -209,7 +208,12 @@ function useUpdater() {
 
 function App() {
   const [accessibilityEnabled, setAccessibilityEnabled] = useState<boolean | null>(null);
+  const [appVersion, setAppVersion] = useState<string>("");
   const { checking, available, version, downloading, progress, error, checkForUpdates, downloadAndInstall } = useUpdater();
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(console.error);
+  }, []);
 
   const checkAccessibility = async () => {
     try {
@@ -336,7 +340,7 @@ function App() {
       {/* Footer */}
       <div className="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between text-gray-500 text-xs">
         <span>
-          v{APP_VERSION} · Made with ♥ by{" "}
+          v{appVersion} · Made with ♥ by{" "}
           <a href="https://ctmakes.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
             ctmakes
           </a>
