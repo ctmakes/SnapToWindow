@@ -1,14 +1,21 @@
 #![cfg(target_os = "macos")]
 
 use super::{Display, Rect, Result, Window, WindowHandle, WindowManagerError, WindowManagerTrait};
+use core_foundation::array::CFArray;
 use core_foundation::base::TCFType;
+use core_foundation::dictionary::CFDictionary;
 use core_foundation::number::CFNumber;
 use core_foundation::string::{CFString, CFStringRef};
 use core_graphics::display::{
     CGDirectDisplayID, CGDisplay, CGGetActiveDisplayList, CGMainDisplayID,
 };
+use core_graphics::window::{
+    kCGNullWindowID, kCGWindowListExcludeDesktopElements, kCGWindowListOptionOnScreenOnly,
+    CGWindowListCopyWindowInfo,
+};
 use std::ffi::c_void;
 use std::ptr;
+use std::sync::atomic::{AtomicI32, Ordering};
 
 // Accessibility API types and constants
 type AXUIElementRef = *mut c_void;
@@ -71,6 +78,9 @@ extern "C" {}
 #[link(name = "Foundation", kind = "framework")]
 extern "C" {}
 
+// Store the last known frontmost app PID for fallback when tray menu steals focus
+static LAST_FRONTMOST_PID: AtomicI32 = AtomicI32::new(0);
+
 pub struct MacOSManager;
 
 impl MacOSManager {
@@ -78,8 +88,86 @@ impl MacOSManager {
         Self
     }
 
+    /// Get the topmost regular window's PID using CGWindowList (fallback method)
+    fn get_topmost_window_pid(&self) -> Result<i32> {
+        use core_foundation::base::CFType;
+
+        unsafe {
+            let options = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements;
+            let window_list = CGWindowListCopyWindowInfo(options, kCGNullWindowID);
+
+            if window_list.is_null() {
+                return Err(WindowManagerError::NoFocusedWindow);
+            }
+
+            let windows: CFArray<CFType> = CFArray::wrap_under_create_rule(window_list as _);
+            let layer_key = CFString::new("kCGWindowLayer");
+            let pid_key = CFString::new("kCGWindowOwnerPID");
+            let name_key = CFString::new("kCGWindowOwnerName");
+
+            // Find the first regular window (layer 0) that isn't our app
+            for i in 0..windows.len() {
+                let window_ptr = windows.get(i).map(|w| w.as_CFTypeRef());
+                if window_ptr.is_none() {
+                    continue;
+                }
+
+                let window_dict: CFDictionary<CFString, CFType> =
+                    CFDictionary::wrap_under_get_rule(window_ptr.unwrap() as _);
+
+                let layer = window_dict.find(&layer_key);
+                let pid = window_dict.find(&pid_key);
+
+                if let (Some(layer_ref), Some(pid_ref)) = (layer, pid) {
+                    let layer_num = CFNumber::wrap_under_get_rule(layer_ref.as_CFTypeRef() as _);
+                    let pid_num = CFNumber::wrap_under_get_rule(pid_ref.as_CFTypeRef() as _);
+
+                    // Layer 0 is regular windows
+                    if layer_num.to_i32() == Some(0) {
+                        if let Some(pid_val) = pid_num.to_i32() {
+                            // Skip our own app (SnapToWindow)
+                            if let Some(name_ref) = window_dict.find(&name_key) {
+                                let name_str =
+                                    CFString::wrap_under_get_rule(name_ref.as_CFTypeRef() as _);
+                                if name_str.to_string().contains("SnapToWindow") {
+                                    continue;
+                                }
+                            }
+                            return Ok(pid_val);
+                        }
+                    }
+                }
+            }
+
+            Err(WindowManagerError::NoFocusedWindow)
+        }
+    }
+
     /// Get the PID of the frontmost application
     fn get_frontmost_app_pid(&self) -> Result<i32> {
+        // Try the standard AX method first
+        if let Ok(pid) = self.get_frontmost_app_pid_ax() {
+            // Save as last known good PID
+            LAST_FRONTMOST_PID.store(pid, Ordering::SeqCst);
+            return Ok(pid);
+        }
+
+        // Fallback 1: Try to get topmost window from CGWindowList
+        if let Ok(pid) = self.get_topmost_window_pid() {
+            return Ok(pid);
+        }
+
+        // Fallback 2: Use last known frontmost PID
+        let last_pid = LAST_FRONTMOST_PID.load(Ordering::SeqCst);
+        if last_pid > 0 {
+            return Ok(last_pid);
+        }
+
+        Err(WindowManagerError::NoFocusedWindow)
+    }
+
+    /// Get the PID of the frontmost application using Accessibility API
+    fn get_frontmost_app_pid_ax(&self) -> Result<i32> {
         unsafe {
             let system_wide = AXUIElementCreateSystemWide();
             if system_wide.is_null() {
