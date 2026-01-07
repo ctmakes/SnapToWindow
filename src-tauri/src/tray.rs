@@ -1,4 +1,5 @@
 use crate::window_manager::{SnapPosition, WindowManager};
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
@@ -7,6 +8,9 @@ use tauri::{
 };
 
 const TRAY_ID: &str = "main-tray";
+
+// Track last known accessibility state
+static LAST_ACCESSIBILITY_STATE: AtomicBool = AtomicBool::new(false);
 
 #[cfg(target_os = "macos")]
 fn check_accessibility() -> bool {
@@ -34,6 +38,7 @@ fn open_accessibility_settings() {
 
 pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let accessibility_enabled = check_accessibility();
+    LAST_ACCESSIBILITY_STATE.store(accessibility_enabled, Ordering::SeqCst);
 
     // Warning item (only shown if accessibility not enabled)
     let warning = MenuItem::with_id(
@@ -316,13 +321,18 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Refresh the tray to update accessibility status
+/// Refresh the tray to update accessibility status (only if changed)
 pub fn refresh_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    // Remove existing tray by dropping it
-    if let Some(tray) = app.remove_tray_by_id(TRAY_ID) {
-        drop(tray);
+    let current = check_accessibility();
+    let last = LAST_ACCESSIBILITY_STATE.load(Ordering::SeqCst);
+
+    // Only rebuild if state changed
+    if current != last {
+        if let Some(tray) = app.remove_tray_by_id(TRAY_ID) {
+            drop(tray);
+        }
+        setup_tray(app)?;
     }
 
-    // Rebuild the tray with current accessibility status
-    setup_tray(app)
+    Ok(())
 }
