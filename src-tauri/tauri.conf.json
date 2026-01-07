@@ -28,7 +28,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDAwMTcwMjUzRTc3OUQzRjkKUldUNTAzbm5Vd0lYQUk1YlJyV3lVWElHVjNhOE9PNGEySnRzZkNPUGpEd3EvL0NIMDY4dmdjM3oK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNGNEE5MkI4NTIzREVBMkYKUldRdjZqMVN1SkpLUHpxRFRBWnFxamczUkNheURZejl1MHZvUHBDWmduNmpxNWJZZWtvbHB0dnQK",
       "endpoints": [
         "https://github.com/ctmakes/SnapToWindow/releases/latest/download/latest.json"
       ]
