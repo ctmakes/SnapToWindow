@@ -355,8 +355,8 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         .tooltip(tooltip)
         .show_menu_on_left_click(true);
 
-    // Show warning indicator next to icon on macOS when accessibility is disabled
-    if !accessibility_enabled {
+    // Show warning indicator next to icon on macOS when accessibility is disabled or update available
+    if !accessibility_enabled || update_available {
         builder = builder.title("!");
     }
 
