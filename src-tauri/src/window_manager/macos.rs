@@ -282,31 +282,28 @@ impl MacOSManager {
 
     /// Get work area for a display using NSScreen
     fn get_display_work_area(&self, display_id: CGDirectDisplayID) -> Result<Rect> {
-        use cocoa::appkit::NSScreen;
-        use cocoa::base::nil;
-        use cocoa::foundation::NSArray;
-        use objc::runtime::Object;
+        use objc2::msg_send;
+        use objc2::runtime::AnyObject;
+        use objc2::MainThreadMarker;
+        use objc2_app_kit::NSScreen;
+        use objc2_foundation::NSString;
 
         unsafe {
-            let screens: *mut Object = NSScreen::screens(nil);
-            let count = NSArray::count(screens);
+            // SAFETY: This code is called from the main thread in a Tauri app
+            let mtm = MainThreadMarker::new_unchecked();
+            let screens = NSScreen::screens(mtm);
+            let screen_number_key = NSString::from_str("NSScreenNumber");
 
-            for i in 0..count {
-                let screen: *mut Object = NSArray::objectAtIndex(screens, i);
-                let screen_dict: *mut Object =
-                    objc::msg_send![screen, deviceDescription];
-                let screen_number_key = CFString::new("NSScreenNumber");
-                let screen_number: *mut Object = objc::msg_send![
-                    screen_dict,
-                    objectForKey: screen_number_key.as_concrete_TypeRef()
-                ];
+            for screen in screens.iter() {
+                let device_desc = screen.deviceDescription();
 
-                if !screen_number.is_null() {
-                    let num: u32 = objc::msg_send![screen_number, unsignedIntValue];
+                if let Some(screen_number_obj) = device_desc.objectForKey(&screen_number_key) {
+                    // Use msg_send to call unsignedIntValue on the NSNumber object
+                    let num: u32 = msg_send![&*screen_number_obj as &AnyObject, unsignedIntValue];
+
                     if num == display_id {
-                        let visible_frame: cocoa::foundation::NSRect =
-                            objc::msg_send![screen, visibleFrame];
-                        let frame: cocoa::foundation::NSRect = objc::msg_send![screen, frame];
+                        let visible_frame = screen.visibleFrame();
+                        let frame = screen.frame();
 
                         // NSScreen uses bottom-left origin, convert to top-left
                         let menu_bar_height =
