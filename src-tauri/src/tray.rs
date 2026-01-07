@@ -1,10 +1,11 @@
 use crate::window_manager::{SnapPosition, WindowManager};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Manager,
+    AppHandle, Emitter, Manager,
 };
 use tauri_plugin_updater::UpdaterExt;
 
@@ -12,6 +13,10 @@ const TRAY_ID: &str = "main-tray";
 
 // Track last known accessibility state
 static LAST_ACCESSIBILITY_STATE: AtomicBool = AtomicBool::new(false);
+
+// Track update availability
+static UPDATE_AVAILABLE: AtomicBool = AtomicBool::new(false);
+static UPDATE_VERSION: Mutex<Option<String>> = Mutex::new(None);
 
 #[cfg(target_os = "macos")]
 fn check_accessibility() -> bool {
@@ -40,6 +45,23 @@ fn open_accessibility_settings() {
 pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let accessibility_enabled = check_accessibility();
     LAST_ACCESSIBILITY_STATE.store(accessibility_enabled, Ordering::SeqCst);
+    let update_available = UPDATE_AVAILABLE.load(Ordering::SeqCst);
+    let update_version = UPDATE_VERSION.lock().unwrap().clone();
+
+    // Update item (only shown if update available)
+    let update_label = if let Some(v) = &update_version {
+        format!("⬆️ Install Update (v{})", v)
+    } else {
+        "⬆️ Install Update".to_string()
+    };
+    let install_update = MenuItem::with_id(
+        app,
+        "install_update",
+        &update_label,
+        true,
+        None::<&str>,
+    )?;
+    let update_sep = PredefinedMenuItem::separator(app)?;
 
     // Warning item (only shown if accessibility not enabled)
     let warning = MenuItem::with_id(
@@ -175,8 +197,42 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let check_updates = MenuItem::with_id(app, "check_updates", "Check for Updates...", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit SnapToWindow", true, None::<&str>)?;
 
-    let menu = if accessibility_enabled {
-        Menu::with_items(
+    let menu = match (accessibility_enabled, update_available) {
+        (true, true) => Menu::with_items(
+            app,
+            &[
+                // Update at top
+                &install_update,
+                &update_sep,
+                // Halves
+                &left_half,
+                &right_half,
+                &top_half,
+                &bottom_half,
+                &sep1,
+                // Quarters
+                &top_left,
+                &top_right,
+                &bottom_left,
+                &bottom_right,
+                &sep2,
+                // Thirds
+                &left_third,
+                &center_third,
+                &right_third,
+                &left_two_thirds,
+                &right_two_thirds,
+                &sep3,
+                // Other
+                &maximize,
+                &center,
+                &sep4,
+                // App controls
+                &settings,
+                &quit,
+            ],
+        )?,
+        (true, false) => Menu::with_items(
             app,
             &[
                 // Halves
@@ -207,9 +263,45 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 &check_updates,
                 &quit,
             ],
-        )?
-    } else {
-        Menu::with_items(
+        )?,
+        (false, true) => Menu::with_items(
+            app,
+            &[
+                // Update at top
+                &install_update,
+                &update_sep,
+                // Warning
+                &warning,
+                &warning_sep,
+                // Halves (disabled)
+                &left_half,
+                &right_half,
+                &top_half,
+                &bottom_half,
+                &sep1,
+                // Quarters (disabled)
+                &top_left,
+                &top_right,
+                &bottom_left,
+                &bottom_right,
+                &sep2,
+                // Thirds (disabled)
+                &left_third,
+                &center_third,
+                &right_third,
+                &left_two_thirds,
+                &right_two_thirds,
+                &sep3,
+                // Other (disabled)
+                &maximize,
+                &center,
+                &sep4,
+                // App controls
+                &settings,
+                &quit,
+            ],
+        )?,
+        (false, false) => Menu::with_items(
             app,
             &[
                 // Warning at top
@@ -243,13 +335,14 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 &check_updates,
                 &quit,
             ],
-        )?
+        )?,
     };
 
-    let tooltip = if accessibility_enabled {
-        "SnapToWindow"
-    } else {
-        "SnapToWindow - ⚠️ Accessibility Required"
+    let tooltip = match (accessibility_enabled, update_available) {
+        (true, true) => "SnapToWindow - ⬆️ Update Available",
+        (true, false) => "SnapToWindow",
+        (false, true) => "SnapToWindow - ⬆️ Update | ⚠️ Accessibility Required",
+        (false, false) => "SnapToWindow - ⚠️ Accessibility Required",
     };
 
     let tray_icon =
@@ -310,9 +403,18 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                     let app_handle = app.clone();
                     tauri::async_runtime::spawn(async move {
                         match check_for_updates(&app_handle).await {
-                            Ok(Some(msg)) => println!("{}", msg),
-                            Ok(None) => println!("No updates available"),
+                            Ok(true) => println!("Update available, tray updated"),
+                            Ok(false) => println!("No updates available"),
                             Err(e) => eprintln!("Update check failed: {}", e),
+                        }
+                    });
+                    None
+                }
+                "install_update" => {
+                    let app_handle = app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        if let Err(e) = do_install_update(&app_handle).await {
+                            eprintln!("Failed to install update: {}", e);
                         }
                     });
                     None
@@ -336,8 +438,8 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Check for updates and install if available
-async fn check_for_updates(app: &AppHandle) -> Result<Option<String>, Box<dyn std::error::Error + Send + Sync>> {
+/// Check for updates and update tray if available
+async fn check_for_updates(app: &AppHandle) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
     let updater = app.updater()?;
 
     match updater.check().await {
@@ -345,28 +447,64 @@ async fn check_for_updates(app: &AppHandle) -> Result<Option<String>, Box<dyn st
             let version = update.version.clone();
             println!("Update available: {}", version);
 
-            // Download and install the update
-            let mut downloaded = 0;
-            update.download_and_install(
-                |chunk_length, content_length| {
-                    downloaded += chunk_length;
-                    println!("Downloaded {} of {:?}", downloaded, content_length);
-                },
-                || {
-                    println!("Download complete, preparing to install...");
-                },
-            ).await?;
+            // Store update info
+            UPDATE_AVAILABLE.store(true, Ordering::SeqCst);
+            *UPDATE_VERSION.lock().unwrap() = Some(version.clone());
 
-            // Restart the app to apply the update
-            app.restart();
+            // Rebuild tray to show update option
+            if let Some(tray) = app.remove_tray_by_id(TRAY_ID) {
+                drop(tray);
+            }
+            setup_tray(app).ok();
+
+            // Notify frontend
+            app.emit("update-available", &version).ok();
+
+            Ok(true)
         }
         Ok(None) => {
             println!("App is up to date");
-            Ok(None)
+            UPDATE_AVAILABLE.store(false, Ordering::SeqCst);
+            *UPDATE_VERSION.lock().unwrap() = None;
+            Ok(false)
         }
         Err(e) => {
             Err(Box::new(e))
         }
+    }
+}
+
+/// Install the available update
+async fn do_install_update(app: &AppHandle) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let updater = app.updater()?;
+
+    if let Some(update) = updater.check().await? {
+        println!("Installing update: {}", update.version);
+
+        let mut downloaded = 0;
+        update.download_and_install(
+            |chunk_length, content_length| {
+                downloaded += chunk_length;
+                println!("Downloaded {} of {:?}", downloaded, content_length);
+            },
+            || {
+                println!("Download complete, preparing to install...");
+            },
+        ).await?;
+
+        // Restart the app to apply the update
+        app.restart();
+    }
+
+    Ok(())
+}
+
+/// Public function to check for updates at startup
+pub async fn check_for_updates_startup(app: &AppHandle) {
+    match check_for_updates(app).await {
+        Ok(true) => println!("Update available on startup"),
+        Ok(false) => println!("App is up to date"),
+        Err(e) => eprintln!("Startup update check failed: {}", e),
     }
 }
 

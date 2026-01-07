@@ -37,6 +37,14 @@ pub fn run() {
                 }
             }
 
+            // Check for updates on startup (with delay)
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                // Small delay to let the app fully initialize
+                std::thread::sleep(std::time::Duration::from_secs(2));
+                tray::check_for_updates_startup(&app_handle).await;
+            });
+
             Ok(())
         })
         .on_window_event(|window, event| {
