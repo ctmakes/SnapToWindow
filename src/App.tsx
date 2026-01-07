@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { check, Update } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 function Logo() {
   return (
@@ -140,8 +142,72 @@ const thirds: ShortcutItem[] = [
   { name: "Right ⅔", shortcut: "⌃⌥R", action: "right_two_thirds" },
 ];
 
+const APP_VERSION = "0.1.1";
+
+function useUpdater() {
+  const [checking, setChecking] = useState(false);
+  const [available, setAvailable] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [update, setUpdate] = useState<Update | null>(null);
+
+  const checkForUpdates = async () => {
+    setChecking(true);
+    setError(null);
+    try {
+      const result = await check();
+      if (result) {
+        setAvailable(true);
+        setVersion(result.version);
+        setUpdate(result);
+      } else {
+        setAvailable(false);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const downloadAndInstall = async () => {
+    if (!update) return;
+    setDownloading(true);
+    setProgress(0);
+    setError(null);
+
+    try {
+      let downloaded = 0;
+      let contentLength = 0;
+
+      await update.downloadAndInstall((event) => {
+        if (event.event === "Started") {
+          contentLength = event.data.contentLength || 0;
+        } else if (event.event === "Progress") {
+          downloaded += event.data.chunkLength;
+          if (contentLength > 0) {
+            setProgress(Math.round((downloaded / contentLength) * 100));
+          }
+        } else if (event.event === "Finished") {
+          setProgress(100);
+        }
+      });
+
+      await relaunch();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setDownloading(false);
+    }
+  };
+
+  return { checking, available, version, downloading, progress, error, checkForUpdates, downloadAndInstall };
+}
+
 function App() {
   const [accessibilityEnabled, setAccessibilityEnabled] = useState<boolean | null>(null);
+  const { checking, available, version, downloading, progress, error, checkForUpdates, downloadAndInstall } = useUpdater();
 
   const checkAccessibility = async () => {
     try {
@@ -167,6 +233,11 @@ function App() {
     checkAccessibility();
     const interval = setInterval(checkAccessibility, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Check for updates on mount
+  useEffect(() => {
+    checkForUpdates();
   }, []);
 
   return (
@@ -222,12 +293,59 @@ function App() {
         <ShortcutColumn title="Thirds" items={thirds} />
       </div>
 
+      {/* Update Section */}
+      {available && version && (
+        <div className="mt-4 p-3 bg-blue-900/50 border border-blue-600 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span className="text-sm text-blue-200">Update available: v{version}</span>
+            </div>
+            <button
+              onClick={downloadAndInstall}
+              disabled={downloading}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors"
+            >
+              {downloading ? "Installing..." : "Install"}
+            </button>
+          </div>
+          {downloading && (
+            <div className="mt-2">
+              <div className="h-1.5 bg-blue-950 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-blue-300 mt-1 text-right">{progress}%</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-4 p-2 bg-red-900/50 border border-red-600 rounded-lg text-xs text-red-300">
+          Update error: {error}
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-gray-800 text-center text-gray-500 text-xs">
-        v0.1.0 · Made with ♥ by{" "}
-        <a href="https://ctmakes.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-          ctmakes
-        </a>
+      <div className="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between text-gray-500 text-xs">
+        <span>
+          v{APP_VERSION} · Made with ♥ by{" "}
+          <a href="https://ctmakes.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+            ctmakes
+          </a>
+        </span>
+        <button
+          onClick={checkForUpdates}
+          disabled={checking}
+          className="text-gray-400 hover:text-white disabled:opacity-50 transition-colors"
+        >
+          {checking ? "Checking..." : "Check for updates"}
+        </button>
       </div>
     </div>
   );
