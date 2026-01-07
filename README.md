@@ -17,16 +17,23 @@ Built with **Tauri**, **Rust**, and **TypeScript** for native performance and a 
 
 | Action | Default Shortcut |
 |--------|------------------|
-| Left Half | `Ctrl/Cmd + Option + Left` |
-| Right Half | `Ctrl/Cmd + Option + Right` |
-| Top Half | `Ctrl/Cmd + Option + Up` |
-| Bottom Half | `Ctrl/Cmd + Option + Down` |
-| Top Left Quarter | `Ctrl/Cmd + Option + U` |
-| Top Right Quarter | `Ctrl/Cmd + Option + I` |
-| Bottom Left Quarter | `Ctrl/Cmd + Option + J` |
-| Bottom Right Quarter | `Ctrl/Cmd + Option + K` |
-| Center | `Ctrl/Cmd + Option + C` |
-| Maximize | `Ctrl/Cmd + Option + Enter` |
+| Left Half | `Ctrl + Alt + Left` |
+| Right Half | `Ctrl + Alt + Right` |
+| Top Half | `Ctrl + Alt + Up` |
+| Bottom Half | `Ctrl + Alt + Down` |
+| Top Left Quarter | `Ctrl + Alt + U` |
+| Top Right Quarter | `Ctrl + Alt + I` |
+| Bottom Left Quarter | `Ctrl + Alt + J` |
+| Bottom Right Quarter | `Ctrl + Alt + K` |
+| Left Third | `Ctrl + Alt + D` |
+| Center Third | `Ctrl + Alt + F` |
+| Right Third | `Ctrl + Alt + G` |
+| Left Two Thirds | `Ctrl + Alt + E` |
+| Right Two Thirds | `Ctrl + Alt + R` |
+| Center | `Ctrl + Alt + C` |
+| Maximize | `Ctrl + Alt + Enter` |
+
+> **Note:** On macOS, `Alt` is the `Option` key.
 
 ## Architecture
 
