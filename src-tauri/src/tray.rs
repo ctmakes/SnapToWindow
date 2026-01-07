@@ -37,34 +37,124 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let warning = MenuItem::with_id(
         app,
         "accessibility_warning",
-        "⚠️ Accessibility Required - Click to Fix",
+        "⚠️ Accessibility Required",
         true,
         None::<&str>,
     )?;
     let warning_sep = PredefinedMenuItem::separator(app)?;
 
     // Halves
-    let left_half = MenuItem::with_id(app, "left_half", "Left Half\t\t\t⌃⌥←", accessibility_enabled, None::<&str>)?;
-    let right_half = MenuItem::with_id(app, "right_half", "Right Half\t\t\t⌃⌥→", accessibility_enabled, None::<&str>)?;
-    let top_half = MenuItem::with_id(app, "top_half", "Top Half\t\t\t⌃⌥↑", accessibility_enabled, None::<&str>)?;
-    let bottom_half = MenuItem::with_id(app, "bottom_half", "Bottom Half\t\t⌃⌥↓", accessibility_enabled, None::<&str>)?;
+    let left_half = MenuItem::with_id(
+        app,
+        "left_half",
+        "Left Half",
+        accessibility_enabled,
+        Some("ctrl+alt+left"),
+    )?;
+    let right_half = MenuItem::with_id(
+        app,
+        "right_half",
+        "Right Half",
+        accessibility_enabled,
+        Some("ctrl+alt+right"),
+    )?;
+    let top_half = MenuItem::with_id(
+        app,
+        "top_half",
+        "Top Half",
+        accessibility_enabled,
+        Some("ctrl+alt+up"),
+    )?;
+    let bottom_half = MenuItem::with_id(
+        app,
+        "bottom_half",
+        "Bottom Half",
+        accessibility_enabled,
+        Some("ctrl+alt+down"),
+    )?;
 
     // Quarters
-    let top_left = MenuItem::with_id(app, "top_left", "Top Left\t\t\t⌃⌥U", accessibility_enabled, None::<&str>)?;
-    let top_right = MenuItem::with_id(app, "top_right", "Top Right\t\t\t⌃⌥I", accessibility_enabled, None::<&str>)?;
-    let bottom_left = MenuItem::with_id(app, "bottom_left", "Bottom Left\t\t⌃⌥J", accessibility_enabled, None::<&str>)?;
-    let bottom_right = MenuItem::with_id(app, "bottom_right", "Bottom Right\t\t⌃⌥K", accessibility_enabled, None::<&str>)?;
+    let top_left = MenuItem::with_id(
+        app,
+        "top_left",
+        "Top Left",
+        accessibility_enabled,
+        Some("ctrl+alt+u"),
+    )?;
+    let top_right = MenuItem::with_id(
+        app,
+        "top_right",
+        "Top Right",
+        accessibility_enabled,
+        Some("ctrl+alt+i"),
+    )?;
+    let bottom_left = MenuItem::with_id(
+        app,
+        "bottom_left",
+        "Bottom Left",
+        accessibility_enabled,
+        Some("ctrl+alt+j"),
+    )?;
+    let bottom_right = MenuItem::with_id(
+        app,
+        "bottom_right",
+        "Bottom Right",
+        accessibility_enabled,
+        Some("ctrl+alt+k"),
+    )?;
 
     // Thirds
-    let left_third = MenuItem::with_id(app, "left_third", "Left Third", accessibility_enabled, None::<&str>)?;
-    let center_third = MenuItem::with_id(app, "center_third", "Center Third", accessibility_enabled, None::<&str>)?;
-    let right_third = MenuItem::with_id(app, "right_third", "Right Third", accessibility_enabled, None::<&str>)?;
-    let left_two_thirds = MenuItem::with_id(app, "left_two_thirds", "Left Two Thirds", accessibility_enabled, None::<&str>)?;
-    let right_two_thirds = MenuItem::with_id(app, "right_two_thirds", "Right Two Thirds", accessibility_enabled, None::<&str>)?;
+    let left_third = MenuItem::with_id(
+        app,
+        "left_third",
+        "Left Third",
+        accessibility_enabled,
+        None::<&str>,
+    )?;
+    let center_third = MenuItem::with_id(
+        app,
+        "center_third",
+        "Center Third",
+        accessibility_enabled,
+        None::<&str>,
+    )?;
+    let right_third = MenuItem::with_id(
+        app,
+        "right_third",
+        "Right Third",
+        accessibility_enabled,
+        None::<&str>,
+    )?;
+    let left_two_thirds = MenuItem::with_id(
+        app,
+        "left_two_thirds",
+        "Left Two Thirds",
+        accessibility_enabled,
+        None::<&str>,
+    )?;
+    let right_two_thirds = MenuItem::with_id(
+        app,
+        "right_two_thirds",
+        "Right Two Thirds",
+        accessibility_enabled,
+        None::<&str>,
+    )?;
 
     // Other actions
-    let maximize = MenuItem::with_id(app, "maximize", "Maximize\t\t\t⌃⌥↵", accessibility_enabled, None::<&str>)?;
-    let center = MenuItem::with_id(app, "center", "Center\t\t\t\t⌃⌥C", accessibility_enabled, None::<&str>)?;
+    let maximize = MenuItem::with_id(
+        app,
+        "maximize",
+        "Maximize",
+        accessibility_enabled,
+        Some("ctrl+alt+enter"),
+    )?;
+    let center = MenuItem::with_id(
+        app,
+        "center",
+        "Center",
+        accessibility_enabled,
+        Some("ctrl+alt+c"),
+    )?;
 
     // Separators
     let sep1 = PredefinedMenuItem::separator(app)?;
@@ -151,10 +241,11 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         "SnapToWindow - ⚠️ Accessibility Required"
     };
 
-    let icon = Image::from_bytes(include_bytes!("../icons/tray.png"))?;
+    let tray_icon =
+        Image::from_bytes(include_bytes!("../icons/tray.png")).expect("Failed to load tray icon");
 
     let mut builder = TrayIconBuilder::new()
-        .icon(icon)
+        .icon(tray_icon)
         .icon_as_template(true)
         .menu(&menu)
         .tooltip(tooltip)
@@ -162,7 +253,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
     // Show warning indicator next to icon on macOS when accessibility is disabled
     if !accessibility_enabled {
-        builder = builder.title("⚠️");
+        builder = builder.title("!");
     }
 
     builder
