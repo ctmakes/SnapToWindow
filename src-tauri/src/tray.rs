@@ -451,11 +451,14 @@ async fn check_for_updates(app: &AppHandle) -> Result<bool, Box<dyn std::error::
             UPDATE_AVAILABLE.store(true, Ordering::SeqCst);
             *UPDATE_VERSION.lock().unwrap() = Some(version.clone());
 
-            // Rebuild tray to show update option
-            if let Some(tray) = app.remove_tray_by_id(TRAY_ID) {
-                drop(tray);
-            }
-            setup_tray(app).ok();
+            // Rebuild tray on main thread (required for macOS)
+            let app_clone = app.clone();
+            app.run_on_main_thread(move || {
+                if let Some(tray) = app_clone.remove_tray_by_id(TRAY_ID) {
+                    drop(tray);
+                }
+                setup_tray(&app_clone).ok();
+            }).ok();
 
             // Notify frontend
             app.emit("update-available", &version).ok();
