@@ -38,30 +38,31 @@ The application uses Rust traits to abstract platform-specific window management
 src-tauri/
 ├── src/
 │   ├── main.rs              # Application entry point
-│   ├── lib.rs               # Library exports
+│   ├── lib.rs               # Library exports & plugin initialization
 │   ├── commands.rs          # Tauri commands (IPC)
 │   ├── hotkeys.rs           # Global hotkey registration
 │   ├── tray.rs              # System tray management
-│   ├── window_manager/
-│   │   ├── mod.rs           # WindowManager trait definition
-│   │   ├── windows.rs       # Windows implementation (Win32 API)
-│   │   ├── macos.rs         # macOS implementation (Accessibility API)
-│   │   └── linux.rs         # Linux implementation (X11/Wayland) [planned]
-│   └── config.rs            # User configuration & shortcuts
+│   ├── config.rs            # User configuration & shortcuts
+│   └── window_manager/
+│       ├── mod.rs           # WindowManager trait definition
+│       ├── types.rs         # Rect, Window, Display, SnapPosition types
+│       ├── windows.rs       # Windows implementation (Win32 API)
+│       ├── macos.rs         # macOS implementation (Accessibility API)
+│       └── linux.rs         # Linux implementation (X11/Wayland) [stub]
 ```
 
 ### Core Trait
 
 ```rust
-pub trait WindowManager: Send + Sync {
+pub trait WindowManagerTrait: Send + Sync {
     /// Get the currently focused window
     fn get_focused_window(&self) -> Result<Window>;
 
     /// Move and resize a window to the specified frame
     fn set_window_frame(&self, window: &Window, frame: Rect) -> Result<()>;
 
-    /// Get the display/monitor containing the window
-    fn get_window_display(&self) -> Result<Display>;
+    /// Get the display/monitor containing the focused window
+    fn get_current_display(&self) -> Result<Display>;
 
     /// Get all available displays
     fn get_all_displays(&self) -> Result<Vec<Display>>;
@@ -75,7 +76,7 @@ pub trait WindowManager: Send + Sync {
 | Frontend | TypeScript, React, Tailwind CSS |
 | Backend | Rust, Tauri 2.0 |
 | Windows API | windows-rs (Win32) |
-| macOS API | objc2, core-graphics |
+| macOS API | core-foundation, core-graphics, cocoa, objc |
 | Build | Cargo, npm, Vite |
 
 ## Development
@@ -136,16 +137,16 @@ Will support both X11 and Wayland compositors through conditional compilation.
 ## Roadmap
 
 - [x] Project setup
-- [ ] Core window management trait
-- [ ] macOS implementation
-- [ ] Windows implementation
-- [ ] Global hotkey registration
-- [ ] System tray integration
+- [x] Core window management trait
+- [x] macOS implementation (Accessibility API)
+- [x] Windows implementation (Win32 API)
+- [x] Global hotkey registration
+- [x] System tray integration
+- [x] Multi-monitor support
 - [ ] Settings UI
 - [ ] Linux support (X11)
 - [ ] Linux support (Wayland)
-- [ ] Multi-monitor support
-- [ ] Custom shortcut configuration
+- [ ] Custom shortcut configuration UI
 - [ ] Automatic updates
 
 ## Contributing
