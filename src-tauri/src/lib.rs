@@ -36,6 +36,8 @@ pub fn run() {
             commands::snap_window,
             commands::get_config,
             commands::save_config,
+            commands::check_accessibility,
+            commands::open_accessibility_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
