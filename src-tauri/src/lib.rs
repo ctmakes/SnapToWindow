@@ -7,18 +7,34 @@ mod hotkeys;
 mod tray;
 mod window_manager;
 
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
         .setup(|app| {
             // Initialize the system tray
             tray::setup_tray(app.handle())?;
 
             // Register global hotkeys
             hotkeys::register_hotkeys(app.handle())?;
+
+            // Sync autostart state with config
+            if let Ok(config) = config::Config::load() {
+                let autostart_manager = app.autolaunch();
+                if config.launch_at_login {
+                    let _ = autostart_manager.enable();
+                } else {
+                    let _ = autostart_manager.disable();
+                }
+            }
 
             Ok(())
         })

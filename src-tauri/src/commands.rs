@@ -1,5 +1,6 @@
 use crate::config::Config;
 use crate::window_manager::{SnapPosition, WindowManager};
+use tauri_plugin_autostart::ManagerExt;
 
 #[tauri::command]
 pub fn snap_window(position: SnapPosition) -> Result<(), String> {
@@ -13,7 +14,19 @@ pub fn get_config() -> Result<Config, String> {
 }
 
 #[tauri::command]
-pub fn save_config(config: Config) -> Result<(), String> {
+pub fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), String> {
+    // Update autostart state
+    let autostart_manager = app.autolaunch();
+    if config.launch_at_login {
+        autostart_manager
+            .enable()
+            .map_err(|e| format!("{:?}", e))?;
+    } else {
+        autostart_manager
+            .disable()
+            .map_err(|e| format!("{:?}", e))?;
+    }
+
     config.save().map_err(|e| e.to_string())
 }
 
