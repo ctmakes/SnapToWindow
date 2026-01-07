@@ -166,7 +166,9 @@ function useUpdater() {
         setAvailable(false);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // Silently fail - update check failures (private repo, no releases, network issues)
+      // shouldn't alarm the user
+      console.log("Update check skipped:", e instanceof Error ? e.message : String(e));
     } finally {
       setChecking(false);
     }
