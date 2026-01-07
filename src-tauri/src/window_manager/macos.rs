@@ -1,10 +1,7 @@
 #![cfg(target_os = "macos")]
 
 use super::{Display, Rect, Result, Window, WindowHandle, WindowManagerError, WindowManagerTrait};
-use core_foundation::array::{CFArray, CFArrayRef};
-use core_foundation::base::{CFType, TCFType};
-use core_foundation::boolean::CFBoolean;
-use core_foundation::dictionary::CFDictionary;
+use core_foundation::base::TCFType;
 use core_foundation::number::CFNumber;
 use core_foundation::string::{CFString, CFStringRef};
 use core_graphics::display::{

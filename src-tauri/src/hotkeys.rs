@@ -24,7 +24,7 @@ pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error
         let shortcut: Shortcut = shortcut_str.parse()?;
         let pos = position.clone();
 
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _event| {
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
             let manager = WindowManager::new();
             if let Err(e) = manager.snap_to(pos.clone()) {
                 eprintln!("Failed to snap window: {}", e);

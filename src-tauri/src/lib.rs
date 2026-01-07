@@ -1,10 +1,12 @@
+#[cfg(target_os = "macos")]
+#[macro_use]
+extern crate objc;
+
 mod commands;
 mod config;
 mod hotkeys;
 mod tray;
 mod window_manager;
-
-use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
