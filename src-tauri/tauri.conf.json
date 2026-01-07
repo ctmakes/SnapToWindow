@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SnapToWindow",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "identifier": "com.snaptowindow.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -28,7 +28,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNGNEE5MkI4NTIzREVBMkYKUldRdjZqMVN1SkpLUHpxRFRBWnFxamczUkNheURZejl1MHZvUHBDWmduNmpxNWJZZWtvbHB0dnQK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhEMjM4NEM0NTI4RUMyMTgKUldRWXdvNVN4SVFqamFvejYrZ0dJUjd0TlNPSzlTZHQySWlKYlZEd0haL1RBakxUYnJGZkYrdnIK",
       "endpoints": [
         "https://github.com/ctmakes/SnapToWindow/releases/latest/download/latest.json"
       ]
