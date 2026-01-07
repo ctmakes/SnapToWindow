@@ -382,27 +382,39 @@ impl MacOSManager {
             let screens = NSScreen::screens(mtm);
             let screen_number_key = NSString::from_str("NSScreenNumber");
 
+            // Get the primary screen height for coordinate conversion
+            // NSScreen uses bottom-left origin, CG/AX uses top-left origin
+            // The first screen in NSScreen.screens() is always the primary screen
+            let primary_screen_height: f64 = screens
+                .iter()
+                .next()
+                .map(|s| s.frame().size.height)
+                .unwrap_or(0.0);
+
             for screen in screens.iter() {
                 let device_desc = screen.deviceDescription();
 
                 // Use msg_send for dictionary lookup to avoid type issues
-                let screen_number_obj: *mut AnyObject = msg_send![&*device_desc, objectForKey: &*screen_number_key];
+                let screen_number_obj: *mut AnyObject =
+                    msg_send![&*device_desc, objectForKey: &*screen_number_key];
 
                 if !screen_number_obj.is_null() {
                     let num: u32 = msg_send![screen_number_obj, unsignedIntValue];
 
                     if num == display_id {
                         let visible_frame = screen.visibleFrame();
-                        let frame = screen.frame();
 
-                        // NSScreen uses bottom-left origin, convert to top-left
-                        let menu_bar_height =
-                            (frame.size.height - visible_frame.size.height - visible_frame.origin.y)
-                                as u32;
+                        // Convert NSScreen coordinates (bottom-left origin) to CG coordinates (top-left origin)
+                        // In NSScreen: y=0 is at bottom of primary screen, positive y goes up
+                        // In CG/AX: y=0 is at top of primary screen, positive y goes down
+                        // CG_y = primary_height - NSScreen_y - height
+                        let cg_y = primary_screen_height
+                            - visible_frame.origin.y
+                            - visible_frame.size.height;
 
                         return Ok(Rect::new(
                             visible_frame.origin.x as i32,
-                            menu_bar_height as i32,
+                            cg_y as i32,
                             visible_frame.size.width as u32,
                             visible_frame.size.height as u32,
                         ));
