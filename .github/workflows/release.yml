@@ -19,6 +19,9 @@ jobs:
           - platform: macos-latest
             args: --target x86_64-apple-darwin
             target: x86_64-apple-darwin
+          - platform: windows-latest
+            args: --target x86_64-pc-windows-msvc
+            target: x86_64-pc-windows-msvc
 
     runs-on: ${{ matrix.platform }}
 
@@ -69,6 +72,7 @@ jobs:
           rm certificate.p12
 
       - name: Debug signing key
+        shell: bash
         run: |
           if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
             echo "TAURI_SIGNING_PRIVATE_KEY is set (length: ${#TAURI_SIGNING_PRIVATE_KEY})"
