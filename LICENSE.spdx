@@ -1,0 +1,15 @@
+SPDXVersion: SPDX-2.1
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: SnapToWindow
+DocumentNamespace: https://github.com/ctmakes/snaptowindow
+Creator: Person: Chi Tao
+
+PackageName: SnapToWindow
+SPDXID: SPDXRef-Package
+PackageOriginator: Person: Chi Tao
+PackageLicenseConcluded: (Apache-2.0 OR MIT)
+PackageLicenseInfoFromFiles: Apache-2.0
+PackageLicenseInfoFromFiles: MIT
+PackageLicenseDeclared: (Apache-2.0 OR MIT)
+PackageCopyrightText: 2026, Chi Tao @ctmakes
