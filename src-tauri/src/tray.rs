@@ -32,6 +32,50 @@ fn check_accessibility() -> bool {
     true
 }
 
+/// Check if Windows is using dark mode for the taskbar/system
+/// Returns true if dark mode is enabled (need white icon)
+#[cfg(target_os = "windows")]
+fn is_windows_dark_mode() -> bool {
+    use windows::Win32::System::Registry::{
+        RegOpenKeyExW, RegQueryValueExW, HKEY_CURRENT_USER, KEY_READ, REG_DWORD,
+    };
+    use windows::core::w;
+
+    unsafe {
+        let mut key = windows::Win32::System::Registry::HKEY::default();
+        let subkey = w!("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize");
+
+        if RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_READ, &mut key).is_ok() {
+            let value_name = w!("SystemUsesLightTheme");
+            let mut data: u32 = 1; // Default to light theme
+            let mut data_size = std::mem::size_of::<u32>() as u32;
+            let mut value_type = REG_DWORD;
+
+            let result = RegQueryValueExW(
+                key,
+                value_name,
+                None,
+                Some(&mut value_type),
+                Some(&mut data as *mut u32 as *mut u8),
+                Some(&mut data_size),
+            );
+
+            let _ = windows::Win32::System::Registry::RegCloseKey(key);
+
+            if result.is_ok() {
+                // SystemUsesLightTheme: 0 = dark mode, 1 = light mode
+                return data == 0;
+            }
+        }
+    }
+    false // Default to light mode (dark icon)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn is_windows_dark_mode() -> bool {
+    false
+}
+
 fn open_accessibility_settings() {
     #[cfg(target_os = "macos")]
     {
@@ -345,8 +389,14 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         (false, false) => "SnapToWindow - ⚠️ Accessibility Required",
     };
 
-    let tray_icon =
-        Image::from_bytes(include_bytes!("../icons/tray.png")).expect("Failed to load tray icon");
+    // Use white icon on Windows dark mode, otherwise use default dark icon
+    let tray_icon = if is_windows_dark_mode() {
+        Image::from_bytes(include_bytes!("../icons/tray-white.png"))
+            .expect("Failed to load tray icon (white)")
+    } else {
+        Image::from_bytes(include_bytes!("../icons/tray.png"))
+            .expect("Failed to load tray icon")
+    };
 
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .icon(tray_icon)
