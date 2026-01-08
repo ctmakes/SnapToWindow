@@ -24,6 +24,9 @@ pub fn run() {
             // Initialize the system tray
             tray::setup_tray(app.handle())?;
 
+            // Start watching for Windows theme changes
+            tray::start_theme_watcher(app.handle().clone());
+
             // Register global hotkeys
             hotkeys::register_hotkeys(app.handle())?;
 

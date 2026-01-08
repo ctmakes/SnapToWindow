@@ -593,3 +593,67 @@ pub fn set_update_available(app: &AppHandle, available: bool, version: Option<St
 
     Ok(())
 }
+
+/// Watch for Windows theme changes and rebuild tray when theme changes
+#[cfg(target_os = "windows")]
+pub fn start_theme_watcher(app: AppHandle) {
+    use windows::Win32::System::Registry::{
+        RegOpenKeyExW, RegNotifyChangeKeyValue, RegCloseKey,
+        HKEY_CURRENT_USER, KEY_NOTIFY, REG_NOTIFY_CHANGE_LAST_SET,
+    };
+    use windows::core::w;
+
+    std::thread::spawn(move || {
+        let subkey = w!("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize");
+        let mut last_dark_mode = is_windows_dark_mode();
+
+        loop {
+            unsafe {
+                let mut key = windows::Win32::System::Registry::HKEY::default();
+
+                if RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_NOTIFY, &mut key).is_ok() {
+                    // Wait for a change to the registry key (blocking call)
+                    let result = RegNotifyChangeKeyValue(
+                        key,
+                        false, // Don't watch subtree
+                        REG_NOTIFY_CHANGE_LAST_SET, // Watch for value changes
+                        None, // No event handle (synchronous)
+                        false, // Synchronous - wait for change
+                    );
+
+                    let _ = RegCloseKey(key);
+
+                    if result.is_ok() {
+                        // Check if dark mode actually changed
+                        let current_dark_mode = is_windows_dark_mode();
+                        if current_dark_mode != last_dark_mode {
+                            last_dark_mode = current_dark_mode;
+
+                            // Rebuild tray on main thread
+                            let app_clone = app.clone();
+                            app.run_on_main_thread(move || {
+                                if let Some(tray) = app_clone.remove_tray_by_id(TRAY_ID) {
+                                    drop(tray);
+                                }
+                                if let Err(e) = setup_tray(&app_clone) {
+                                    eprintln!("Failed to rebuild tray after theme change: {}", e);
+                                }
+                            }).ok();
+                        }
+                    } else {
+                        // If notification fails, wait a bit before retrying
+                        std::thread::sleep(std::time::Duration::from_secs(5));
+                    }
+                } else {
+                    // If we can't open the key, wait before retrying
+                    std::thread::sleep(std::time::Duration::from_secs(5));
+                }
+            }
+        }
+    });
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn start_theme_watcher(_app: AppHandle) {
+    // No-op on non-Windows platforms (macOS handles this via template icons)
+}
