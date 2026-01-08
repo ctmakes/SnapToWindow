@@ -8,10 +8,9 @@ use windows::Win32::Graphics::Gdi::{
     EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFOEXW,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowRect, GetWindowTextLengthW, GetWindowTextW,
-    GetWindowThreadProcessId, IsIconic, IsWindowVisible, IsZoomed, SetWindowPos,
-    ShowWindow, HWND_TOP, SET_WINDOW_POS_FLAGS, SWP_NOACTIVATE, SWP_NOZORDER,
-    SW_RESTORE, WINDOWPLACEMENT, GetWindowPlacement,
+    GetForegroundWindow, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, IsIconic,
+    IsWindowVisible, IsZoomed, SetWindowPos, ShowWindow, HWND_TOP, SET_WINDOW_POS_FLAGS,
+    SWP_NOACTIVATE, SWP_NOZORDER, SW_RESTORE,
 };
 
 pub struct WindowsManager;
@@ -193,8 +192,10 @@ impl WindowManagerTrait for WindowsManager {
             _rect: *mut RECT,
             lparam: LPARAM,
         ) -> BOOL {
-            let collector = &mut *(lparam.0 as *mut MonitorCollector);
-            collector.monitors.push(hmonitor);
+            unsafe {
+                let collector = &mut *(lparam.0 as *mut MonitorCollector);
+                collector.monitors.push(hmonitor);
+            }
             TRUE
         }
 
