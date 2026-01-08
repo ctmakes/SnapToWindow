@@ -128,7 +128,7 @@ Will support both X11 and Wayland compositors through conditional compilation.
 - [x] Project setup
 - [x] Core window management trait
 - [x] macOS implementation (Accessibility API)
-- [ ] Windows implementation (Win32 API)
+- [x] Windows implementation (Win32 API)
 - [x] Global hotkey registration
 - [x] System tray integration
 - [x] Multi-monitor support
@@ -136,7 +136,7 @@ Will support both X11 and Wayland compositors through conditional compilation.
 - [ ] Linux support (X11)
 - [ ] Linux support (Wayland)
 - [ ] Custom shortcut configuration UI
-- [ ] Automatic updates
+- [x] Automatic updates
 
 ## Contributing
 
