@@ -3,7 +3,7 @@ name = "snaptowindow"
 version = "0.1.16"
 edition = "2024"
 description = "A cross-platform window management application"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/ctmakes/SnapToWindow"
 
 [build-dependencies]
