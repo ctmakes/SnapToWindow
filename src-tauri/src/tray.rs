@@ -229,6 +229,13 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         accessibility_enabled,
         Some("ctrl+alt+c"),
     )?;
+    let next_dis = MenuItem::with_id(
+        app,
+        "next_display",
+        "Next Display",
+        accessibility_enabled,
+        Some("ctrl+alt+n"),
+    )?;
 
     // Separators
     let sep1 = PredefinedMenuItem::separator(app)?;
@@ -270,6 +277,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 // Other
                 &maximize,
                 &center,
+                &next_dis,
                 &sep4,
                 // App controls
                 &settings,
@@ -301,6 +309,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 // Other
                 &maximize,
                 &center,
+                &next_dis,
                 &sep4,
                 // App controls
                 &settings,
@@ -339,6 +348,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 // Other (disabled)
                 &maximize,
                 &center,
+                &next_dis,
                 &sep4,
                 // App controls
                 &settings,
@@ -373,6 +383,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 // Other (disabled)
                 &maximize,
                 &center,
+                &next_dis,
                 &sep4,
                 // App controls
                 &settings,
@@ -441,6 +452,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 // Other
                 "maximize" => Some(SnapPosition::Maximize),
                 "center" => Some(SnapPosition::Center),
+                "next_display" => Some(SnapPosition::NextDisplay),
                 // Non-snap actions
                 "settings" => {
                     if let Some(window) = app.get_webview_window("main") {

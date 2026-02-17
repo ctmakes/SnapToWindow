@@ -236,6 +236,18 @@ impl WindowManagerTrait for WindowsManager {
 
         Ok(displays)
     }
+
+    fn get_next_display(&self) -> Result<Display> {
+        let cur_dis = self.get_current_display()?;
+        let mut all_dis = self.get_all_displays()?;
+        let mut next_id = 0;
+        for i in 0..all_dis.len() {
+            if all_dis[i].name == cur_dis.name && i < all_dis.len() {
+                next_id = i + 1;
+            }
+        }
+        Ok(all_dis.remove(next_id))
+    }
 }
 
 impl Default for WindowsManager {

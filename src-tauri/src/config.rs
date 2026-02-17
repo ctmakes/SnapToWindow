@@ -26,6 +26,7 @@ pub struct ShortcutConfig {
     pub right_two_thirds: String,
     pub center: String,
     pub maximize: String,
+    pub next_display: String,
 }
 
 impl Default for Config {
@@ -55,6 +56,7 @@ impl Default for ShortcutConfig {
             right_two_thirds: "Control+Alt+R".to_string(),
             center: "Control+Alt+C".to_string(),
             maximize: "Control+Alt+Enter".to_string(),
+            next_display: "Control+Alt+N".to_string(),
         }
     }
 }

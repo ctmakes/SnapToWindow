@@ -3445,6 +3445,7 @@ dependencies = [
  "core-foundation",
  "core-graphics",
  "dirs 5.0.1",
+ "global-hotkey",
  "objc",
  "objc2",
  "objc2-app-kit",

@@ -36,6 +36,12 @@ impl WindowManagerTrait for LinuxManager {
         // For Wayland, enumerate wl_output objects
         Err(WindowManagerError::PlatformNotSupported)
     }
+
+    fn get_next_display(&self) -> Result<Vec<Display>> {
+        // TODO: Implement using Xrandr for X11
+        // For Wayland, enumerate wl_output objects
+        Err(WindowManagerError::PlatformNotSupported)
+    }
 }
 
 impl Default for LinuxManager {

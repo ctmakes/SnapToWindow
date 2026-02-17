@@ -69,6 +69,7 @@ pub enum SnapPosition {
     RightThird,
     LeftTwoThirds,
     RightTwoThirds,
+    NextDisplay,
 }
 
 impl SnapPosition {
@@ -104,6 +105,8 @@ impl SnapPosition {
             }
 
             SnapPosition::Maximize => Rect::new(x, y, w, h),
+
+            SnapPosition::NextDisplay => Rect::new(x, y, w, h),
 
             SnapPosition::LeftThird => Rect::new(x, y, w / 3, h),
             SnapPosition::CenterThird => Rect::new(x + (w / 3) as i32, y, w / 3, h),

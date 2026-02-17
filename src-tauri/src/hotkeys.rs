@@ -1,5 +1,6 @@
 use crate::config::Config;
 use crate::window_manager::{SnapPosition, WindowManager};
+use global_hotkey::HotKeyState;
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
@@ -23,15 +24,18 @@ pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error
         (&shortcuts.right_two_thirds, SnapPosition::RightTwoThirds),
         (&shortcuts.center, SnapPosition::Center),
         (&shortcuts.maximize, SnapPosition::Maximize),
+        (&shortcuts.next_display, SnapPosition::NextDisplay),
     ];
 
     for (shortcut_str, position) in shortcut_mappings {
         let shortcut: Shortcut = shortcut_str.parse()?;
-        let pos = position.clone();
 
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+            if event.state == HotKeyState::Released {
+                return
+            }
             let manager = WindowManager::new();
-            if let Err(e) = manager.snap_to(pos.clone()) {
+            if let Err(e) = manager.snap_to(position) {
                 eprintln!("Failed to snap window: {}", e);
             }
         })?;

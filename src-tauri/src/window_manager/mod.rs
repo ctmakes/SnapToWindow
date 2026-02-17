@@ -35,6 +35,9 @@ pub trait WindowManagerTrait: Send + Sync {
     /// Move and resize a window to the specified frame.
     fn set_window_frame(&self, window: &Window, frame: Rect) -> Result<()>;
 
+    /// Get the next display/monitor from the one containing the focused window.
+    fn get_next_display(&self) -> Result<Display>;
+
     /// Get the display/monitor containing the focused window.
     fn get_current_display(&self) -> Result<Display>;
 
@@ -71,7 +74,10 @@ impl WindowManager {
     /// Snap the focused window to the specified position.
     pub fn snap_to(&self, position: SnapPosition) -> Result<()> {
         let window = self.inner.get_focused_window()?;
-        let display = self.inner.get_current_display()?;
+        let display = match position {
+            SnapPosition::NextDisplay => self.inner.get_next_display()?,
+            _ => self.inner.get_current_display()?,
+        };
         let frame = position.calculate_frame(&display.work_area);
 
         self.inner.set_window_frame(&window, frame)
