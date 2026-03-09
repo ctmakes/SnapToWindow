@@ -144,6 +144,11 @@ Will support both X11 and Wayland compositors through conditional compilation.
 
 ## Changelog
 
+### v0.1.18
+- Added move window to next/previous display (`Ctrl+Alt+]` / `Ctrl+Alt+[`)
+- Windows are maximized on the target display
+- Displays cycle in left-to-right, top-to-bottom order
+
 ### v0.1.17
 - Added "Launch at Login" toggle in system tray menu
 - Uses native checkmark indicator for toggle state
