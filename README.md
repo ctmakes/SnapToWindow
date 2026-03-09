@@ -12,6 +12,7 @@ Built with **Tauri**, **Rust**, and **TypeScript** for native performance and a 
 - **Cross-Platform**: Works on Windows and macOS (Linux support planned)
 - **Lightweight**: Minimal resource usage thanks to Tauri
 - **Auto-Update**: Seamless background updates with Tauri's updater plugin
+- **Launch at Login**: Optional auto-start when your computer boots
 
 ## Supported Window Positions
 
@@ -137,6 +138,14 @@ Will support both X11 and Wayland compositors through conditional compilation.
 - [ ] Linux support (Wayland)
 - [ ] Custom shortcut configuration UI
 - [x] Automatic updates
+- [x] Launch at Login
+
+## Changelog
+
+### v0.1.17
+- Added "Launch at Login" toggle in system tray menu
+- Uses native checkmark indicator for toggle state
+- Syncs with system autostart settings (macOS Login Items, Windows Startup)
 
 ## Contributing
 
