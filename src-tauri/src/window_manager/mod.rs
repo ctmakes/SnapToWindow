@@ -23,6 +23,9 @@ pub enum WindowManagerError {
 
     #[error("Failed to move window: {0}")]
     MoveError(String),
+
+    #[error("No adjacent display in that direction")]
+    NoAdjacentDisplay,
 }
 
 pub type Result<T> = std::result::Result<T, WindowManagerError>;
@@ -75,6 +78,49 @@ impl WindowManager {
         let frame = position.calculate_frame(&display.work_area);
 
         self.inner.set_window_frame(&window, frame)
+    }
+
+    /// Move the focused window to the next or previous display (maximized).
+    pub fn move_to_display(&self, direction: DisplayDirection) -> Result<()> {
+        let window = self.inner.get_focused_window()?;
+        let current_display = self.inner.get_current_display()?;
+        let mut displays = self.inner.get_all_displays()?;
+
+        if displays.len() < 2 {
+            return Err(WindowManagerError::NoAdjacentDisplay);
+        }
+
+        // Sort displays by X coordinate (left to right)
+        displays.sort_by_key(|d| d.bounds.x);
+
+        // Find the index of the current display
+        let current_idx = displays
+            .iter()
+            .position(|d| d.bounds.x == current_display.bounds.x && d.bounds.y == current_display.bounds.y)
+            .ok_or(WindowManagerError::DisplayError)?;
+
+        // Calculate target display index based on direction (wrap around)
+        let target_idx = match direction {
+            DisplayDirection::Next => (current_idx + 1) % displays.len(),
+            DisplayDirection::Previous => {
+                if current_idx == 0 {
+                    displays.len() - 1
+                } else {
+                    current_idx - 1
+                }
+            }
+        };
+
+        let target_display = &displays[target_idx];
+
+        // Maximize window on target display
+        let new_frame = Rect::new(
+            target_display.work_area.x,
+            target_display.work_area.y,
+            target_display.work_area.width,
+            target_display.work_area.height,
+        );
+        self.inner.set_window_frame(&window, new_frame)
     }
 }
 

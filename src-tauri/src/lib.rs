@@ -65,6 +65,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::snap_window,
+            commands::move_window_to_display,
             commands::get_config,
             commands::save_config,
             commands::check_accessibility,

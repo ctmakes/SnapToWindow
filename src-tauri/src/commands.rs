@@ -1,12 +1,18 @@
 use crate::config::Config;
 use crate::tray;
-use crate::window_manager::{SnapPosition, WindowManager};
+use crate::window_manager::{DisplayDirection, SnapPosition, WindowManager};
 use tauri_plugin_autostart::ManagerExt;
 
 #[tauri::command]
 pub fn snap_window(position: SnapPosition) -> Result<(), String> {
     let manager = WindowManager::new();
     manager.snap_to(position).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn move_window_to_display(direction: DisplayDirection) -> Result<(), String> {
+    let manager = WindowManager::new();
+    manager.move_to_display(direction).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

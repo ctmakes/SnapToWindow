@@ -33,6 +33,8 @@ Built with **Tauri**, **Rust**, and **TypeScript** for native performance and a 
 | Right Two Thirds | `Ctrl + Alt + R` | `⌃ + ⌥ + R` |
 | Center | `Ctrl + Alt + C` | `⌃ + ⌥ + C` |
 | Maximize | `Ctrl + Alt + Enter` | `⌃ + ⌥ + Enter` |
+| Next Display | `Ctrl + Alt + ]` | `⌃ + ⌥ + ]` |
+| Previous Display | `Ctrl + Alt + [` | `⌃ + ⌥ + [` |
 
 > **Note:** ⌃ = Control, ⌥ = Option
 

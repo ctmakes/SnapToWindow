@@ -50,6 +50,14 @@ pub struct Display {
     pub is_primary: bool,
 }
 
+/// Direction for moving windows between displays.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DisplayDirection {
+    Next,
+    Previous,
+}
+
 /// The snap positions supported by the application.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

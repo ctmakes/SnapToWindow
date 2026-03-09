@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::window_manager::{SnapPosition, WindowManager};
+use crate::window_manager::{DisplayDirection, SnapPosition, WindowManager};
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
@@ -33,6 +33,24 @@ pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error
             let manager = WindowManager::new();
             if let Err(e) = manager.snap_to(pos.clone()) {
                 eprintln!("Failed to snap window: {}", e);
+            }
+        })?;
+    }
+
+    // Register display movement shortcuts
+    let display_mappings = [
+        (&shortcuts.next_display, DisplayDirection::Next),
+        (&shortcuts.previous_display, DisplayDirection::Previous),
+    ];
+
+    for (shortcut_str, direction) in display_mappings {
+        let shortcut: Shortcut = shortcut_str.parse()?;
+        let dir = direction.clone();
+
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+            let manager = WindowManager::new();
+            if let Err(e) = manager.move_to_display(dir.clone()) {
+                eprintln!("Failed to move window to display: {}", e);
             }
         })?;
     }
