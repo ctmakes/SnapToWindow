@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::{
     image::Image,
-    menu::{Menu, MenuItem, PredefinedMenuItem},
+    menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
     AppHandle, Emitter, Manager,
 };
@@ -240,12 +240,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 
     // Settings, Updates, and Quit
     let launch_at_login_enabled = Config::load().map(|c| c.launch_at_login).unwrap_or(false);
-    let launch_at_login_label = if launch_at_login_enabled {
-        "Launch at Login\t\t✓"
-    } else {
-        "Launch at Login\t\t✗"
-    };
-    let launch_at_login = MenuItem::with_id(app, "launch_at_login", launch_at_login_label, true, None::<&str>)?;
+    let launch_at_login = CheckMenuItem::with_id(app, "launch_at_login", "Launch at Login", true, launch_at_login_enabled, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
     let check_updates = MenuItem::with_id(app, "check_updates", "Check for Updates...", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit SnapToWindow", true, None::<&str>)?;
@@ -456,31 +451,33 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 "center" => Some(SnapPosition::Center),
                 // Non-snap actions
                 "launch_at_login" => {
-                    // Toggle launch at login
-                    if let Ok(mut config) = Config::load() {
-                        config.launch_at_login = !config.launch_at_login;
-                        let _ = config.save();
+                    println!("Launch at login clicked!");
+                    let autostart = app.autolaunch();
 
-                        // Update autostart
-                        let autostart = app.autolaunch();
-                        if config.launch_at_login {
-                            let _ = autostart.enable();
-                        } else {
-                            let _ = autostart.disable();
+                    // Check current system state
+                    let currently_enabled = autostart.is_enabled().unwrap_or(false);
+                    println!("Current autostart state: {}", currently_enabled);
+
+                    // Toggle based on actual system state
+                    let new_state = !currently_enabled;
+                    println!("Setting autostart to: {}", new_state);
+
+                    let result = if new_state {
+                        autostart.enable()
+                    } else {
+                        autostart.disable()
+                    };
+
+                    match result {
+                        Ok(_) => {
+                            println!("Autostart updated successfully");
+                            // Save to config
+                            if let Ok(mut config) = Config::load() {
+                                config.launch_at_login = new_state;
+                                let _ = config.save();
+                            }
                         }
-
-                        // Rebuild tray to update indicator (with delay to let menu close first)
-                        let app_clone = app.clone();
-                        std::thread::spawn(move || {
-                            std::thread::sleep(std::time::Duration::from_millis(100));
-                            let app_for_rebuild = app_clone.clone();
-                            app_clone.run_on_main_thread(move || {
-                                if let Some(tray) = app_for_rebuild.remove_tray_by_id(TRAY_ID) {
-                                    drop(tray);
-                                }
-                                setup_tray(&app_for_rebuild).ok();
-                            }).ok();
-                        });
+                        Err(e) => eprintln!("Failed to update autostart: {}", e),
                     }
                     None
                 }
