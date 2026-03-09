@@ -451,16 +451,9 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 "center" => Some(SnapPosition::Center),
                 // Non-snap actions
                 "launch_at_login" => {
-                    println!("Launch at login clicked!");
                     let autostart = app.autolaunch();
-
-                    // Check current system state
                     let currently_enabled = autostart.is_enabled().unwrap_or(false);
-                    println!("Current autostart state: {}", currently_enabled);
-
-                    // Toggle based on actual system state
                     let new_state = !currently_enabled;
-                    println!("Setting autostart to: {}", new_state);
 
                     let result = if new_state {
                         autostart.enable()
@@ -468,16 +461,11 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                         autostart.disable()
                     };
 
-                    match result {
-                        Ok(_) => {
-                            println!("Autostart updated successfully");
-                            // Save to config
-                            if let Ok(mut config) = Config::load() {
-                                config.launch_at_login = new_state;
-                                let _ = config.save();
-                            }
+                    if result.is_ok() {
+                        if let Ok(mut config) = Config::load() {
+                            config.launch_at_login = new_state;
+                            let _ = config.save();
                         }
-                        Err(e) => eprintln!("Failed to update autostart: {}", e),
                     }
                     None
                 }
