@@ -90,8 +90,10 @@ impl WindowManager {
             return Err(WindowManagerError::NoAdjacentDisplay);
         }
 
-        // Sort displays by X coordinate (left to right)
-        displays.sort_by_key(|d| d.bounds.x);
+        // Sort displays by X coordinate, then Y coordinate (left-to-right, top-to-bottom)
+        displays.sort_by(|a, b| {
+            a.bounds.x.cmp(&b.bounds.x).then(a.bounds.y.cmp(&b.bounds.y))
+        });
 
         // Find the index of the current display
         let current_idx = displays
@@ -120,6 +122,7 @@ impl WindowManager {
             target_display.work_area.width,
             target_display.work_area.height,
         );
+
         self.inner.set_window_frame(&window, new_frame)
     }
 }

@@ -466,18 +466,23 @@ impl WindowManagerTrait for MacOSManager {
 
         let window_element = self.get_focused_window_element(pid)?;
 
-        // Set position first, then size
-        let position = CGPoint {
+        let target_position = CGPoint {
             x: frame.x as f64,
             y: frame.y as f64,
         };
-        let size = CGSize {
+        let target_size = CGSize {
             width: frame.width as f64,
             height: frame.height as f64,
         };
 
-        self.set_window_position(window_element, position)?;
-        self.set_window_size(window_element, size)?;
+        // Always use move-then-size to avoid window spanning displays
+        // Move to target position first, then resize
+        self.set_window_position(window_element, target_position)?;
+        self.set_window_size(window_element, target_size)?;
+
+        // Set position again to ensure correct placement after resize
+        // (some apps adjust position when resized)
+        self.set_window_position(window_element, target_position)?;
 
         unsafe {
             core_foundation::base::CFRelease(window_element as *const c_void);
