@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::window_manager::{SnapPosition, WindowManager};
+use crate::window_manager::{DisplayDirection, SnapPosition, WindowManager};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::{
@@ -232,11 +232,28 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         Some("ctrl+alt+c"),
     )?;
 
+    // Display actions
+    let next_display = MenuItem::with_id(
+        app,
+        "next_display",
+        "Next Display",
+        accessibility_enabled,
+        Some("ctrl+alt+]"),
+    )?;
+    let previous_display = MenuItem::with_id(
+        app,
+        "previous_display",
+        "Previous Display",
+        accessibility_enabled,
+        Some("ctrl+alt+["),
+    )?;
+
     // Separators
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
     let sep3 = PredefinedMenuItem::separator(app)?;
     let sep4 = PredefinedMenuItem::separator(app)?;
+    let sep5 = PredefinedMenuItem::separator(app)?;
 
     // Settings, Updates, and Quit
     let launch_at_login_enabled = Config::load().map(|c| c.launch_at_login).unwrap_or(false);
@@ -275,6 +292,10 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 &maximize,
                 &center,
                 &sep4,
+                // Display
+                &next_display,
+                &previous_display,
+                &sep5,
                 // App controls
                 &launch_at_login,
                 &settings,
@@ -307,6 +328,10 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 &maximize,
                 &center,
                 &sep4,
+                // Display
+                &next_display,
+                &previous_display,
+                &sep5,
                 // App controls
                 &launch_at_login,
                 &settings,
@@ -346,6 +371,10 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 &maximize,
                 &center,
                 &sep4,
+                // Display (disabled)
+                &next_display,
+                &previous_display,
+                &sep5,
                 // App controls
                 &launch_at_login,
                 &settings,
@@ -381,6 +410,10 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 &maximize,
                 &center,
                 &sep4,
+                // Display (disabled)
+                &next_display,
+                &previous_display,
+                &sep5,
                 // App controls
                 &launch_at_login,
                 &settings,
@@ -449,6 +482,21 @@ pub fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 // Other
                 "maximize" => Some(SnapPosition::Maximize),
                 "center" => Some(SnapPosition::Center),
+                // Display actions
+                "next_display" => {
+                    let manager = WindowManager::new();
+                    if let Err(e) = manager.move_to_display(DisplayDirection::Next) {
+                        eprintln!("Failed to move window to next display: {}", e);
+                    }
+                    None
+                }
+                "previous_display" => {
+                    let manager = WindowManager::new();
+                    if let Err(e) = manager.move_to_display(DisplayDirection::Previous) {
+                        eprintln!("Failed to move window to previous display: {}", e);
+                    }
+                    None
+                }
                 // Non-snap actions
                 "launch_at_login" => {
                     let autostart = app.autolaunch();

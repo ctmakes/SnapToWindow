@@ -41,7 +41,9 @@ type SnapPosition =
   | "center_third"
   | "right_third"
   | "left_two_thirds"
-  | "right_two_thirds";
+  | "right_two_thirds"
+  | "next_display"
+  | "previous_display";
 
 interface ShortcutItem {
   name: string;
@@ -50,6 +52,18 @@ interface ShortcutItem {
 }
 
 function SnapPreview({ position }: { position: SnapPosition }) {
+  // Special preview for display actions - show two monitors with arrow
+  if (position === "next_display" || position === "previous_display") {
+    const isNext = position === "next_display";
+    return (
+      <div className="w-10 h-7 flex items-center justify-center gap-0.5 flex-shrink-0">
+        <div className={`w-4 h-5 rounded-[2px] border ${isNext ? 'border-gray-600 bg-gray-700' : 'border-blue-500 bg-blue-500/30'}`} />
+        <span className="text-[8px] text-gray-500">{isNext ? '→' : '←'}</span>
+        <div className={`w-4 h-5 rounded-[2px] border ${isNext ? 'border-blue-500 bg-blue-500/30' : 'border-gray-600 bg-gray-700'}`} />
+      </div>
+    );
+  }
+
   const getPreviewStyle = (): string => {
     const base = "absolute bg-blue-500 rounded-[1px]";
     switch (position) {
@@ -134,6 +148,11 @@ const quarters: ShortcutItem[] = [
   { name: "Bottom Right", shortcut: "⌃⌥K", action: "bottom_right" },
   { name: "Center", shortcut: "⌃⌥C", action: "center" },
   { name: "Maximize", shortcut: "⌃⌥↵", action: "maximize" },
+];
+
+const display: ShortcutItem[] = [
+  { name: "Next Display", shortcut: "⌃⌥]", action: "next_display" },
+  { name: "Prev Display", shortcut: "⌃⌥[", action: "previous_display" },
 ];
 
 const thirds: ShortcutItem[] = [
@@ -319,7 +338,12 @@ function App() {
 
       {/* 3-Column Shortcuts Grid */}
       <div className="grid grid-cols-3 gap-6">
-        <ShortcutColumn title="Halves" items={halves} />
+        <div>
+          <ShortcutColumn title="Halves" items={halves} />
+          <div className="mt-4">
+            <ShortcutColumn title="Display" items={display} />
+          </div>
+        </div>
         <ShortcutColumn title="Quarters" items={quarters} />
         <ShortcutColumn title="Thirds" items={thirds} />
       </div>
