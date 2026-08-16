@@ -144,6 +144,16 @@ Will support both X11 and Wayland compositors through conditional compilation.
 
 ## Changelog
 
+### v0.1.21
+- Fixed snapped windows landing inset from screen edges on Windows — the invisible resize border is now measured per window and compensated for, so halves and quarters sit flush and share no gutter
+- Cross-monitor moves stay correct when the border width or DPI changes between displays
+
+### v0.1.20
+- Dependency and CI maintenance: npm/Cargo audit fixes, GitHub Actions upgraded for Node.js 24
+
+### v0.1.19
+- Upgraded React 19, Tailwind CSS 4, Vite 8, and TypeScript 6
+
 ### v0.1.18
 - Added move window to next/previous display (`Ctrl+Alt+]` / `Ctrl+Alt+[`)
 - Windows are maximized on the target display
