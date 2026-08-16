@@ -4,6 +4,7 @@ use super::{Display, Rect, Result, Window, WindowHandle, WindowManagerError, Win
 use std::mem;
 use std::ptr;
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM, RECT, TRUE};
+use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
 use windows::Win32::Graphics::Gdi::{
     EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFOEXW,
 };
@@ -68,6 +69,75 @@ impl WindowsManager {
         }
     }
 
+    /// Get the *visible* window bounds as drawn by DWM.
+    ///
+    /// Since Windows 10 most top-level windows carry an invisible resize border
+    /// (the drop-shadow margin) that `GetWindowRect` includes but the user never
+    /// sees. This attribute reports the frame the user actually perceives.
+    fn get_extended_frame_bounds(&self, hwnd: HWND) -> Option<RECT> {
+        unsafe {
+            let mut rect = RECT::default();
+            DwmGetWindowAttribute(
+                hwnd,
+                DWMWA_EXTENDED_FRAME_BOUNDS,
+                &mut rect as *mut _ as *mut _,
+                mem::size_of::<RECT>() as u32,
+            )
+            .ok()?;
+            Some(rect)
+        }
+    }
+
+    /// Measure the invisible border as `(left, top, right, bottom)` deltas from
+    /// the `GetWindowRect` rect to the visible DWM rect.
+    ///
+    /// Typically `(9, 0, -9, -9)` at 150% scaling, `(0, 0, 0, 0)` for windows
+    /// without a sizing frame. The values depend on the DPI of the monitor the
+    /// window currently sits on, so this must be re-measured after every move.
+    fn frame_offsets(&self, hwnd: HWND) -> (i32, i32, i32, i32) {
+        let Ok(window_rect) = self.get_window_rect(hwnd) else {
+            return (0, 0, 0, 0);
+        };
+        let Some(visible) = self.get_extended_frame_bounds(hwnd) else {
+            return (0, 0, 0, 0);
+        };
+
+        // A minimized window parks at (-32000, -32000) and reports nonsense
+        // bounds; refuse to derive offsets from it.
+        if window_rect.left <= -32000 || visible.right <= visible.left {
+            return (0, 0, 0, 0);
+        }
+
+        (
+            visible.left - window_rect.left,
+            visible.top - window_rect.top,
+            visible.right - window_rect.right,
+            visible.bottom - window_rect.bottom,
+        )
+    }
+
+    /// Position a window so its *visible* frame lands exactly on `frame`,
+    /// compensating for the invisible border measured by `offsets`.
+    fn apply_frame(&self, hwnd: HWND, frame: Rect, offsets: (i32, i32, i32, i32)) -> Result<()> {
+        let (dl, dt, dr, db) = offsets;
+
+        // Solving `visible == frame` for the outer rect SetWindowPos expects:
+        //   outer.left = frame.left - dl, outer.right = frame.right - dr
+        let x = frame.x - dl;
+        let y = frame.y - dt;
+        let width = frame.width as i32 + (dl - dr);
+        let height = frame.height as i32 + (dt - db);
+
+        unsafe {
+            let flags: SET_WINDOW_POS_FLAGS = SWP_NOZORDER | SWP_NOACTIVATE;
+
+            SetWindowPos(hwnd, HWND_TOP, x, y, width.max(1), height.max(1), flags)
+                .map_err(|e| WindowManagerError::MoveError(format!("SetWindowPos failed: {}", e)))?;
+        }
+
+        Ok(())
+    }
+
     /// Convert RECT to our Rect type
     fn rect_from_win32(&self, rect: &RECT) -> Rect {
         Rect::new(
@@ -110,7 +180,13 @@ impl WindowManagerTrait for WindowsManager {
             }
 
             let title = self.get_window_title(hwnd);
-            let rect = self.get_window_rect(hwnd)?;
+
+            // Report the visible frame so `Window.frame` means the same thing it
+            // does on macOS — what the user sees, not the shadow-padded rect.
+            let rect = match self.get_extended_frame_bounds(hwnd) {
+                Some(visible) => visible,
+                None => self.get_window_rect(hwnd)?,
+            };
 
             Ok(Window {
                 handle: WindowHandle::Windows(hwnd.0 as isize),
@@ -125,23 +201,21 @@ impl WindowManagerTrait for WindowsManager {
             WindowHandle::Windows(h) => HWND(h as *mut _),
         };
 
-        // Restore window first if it's minimized or maximized
+        // Restore window first if it's minimized or maximized. The border width
+        // differs between the maximized and restored states, so this has to
+        // happen before we measure.
         self.restore_window(hwnd);
 
-        unsafe {
-            // Use SetWindowPos to move and resize
-            let flags: SET_WINDOW_POS_FLAGS = SWP_NOZORDER | SWP_NOACTIVATE;
+        let offsets = self.frame_offsets(hwnd);
+        self.apply_frame(hwnd, frame, offsets)?;
 
-            SetWindowPos(
-                hwnd,
-                HWND_TOP,
-                frame.x,
-                frame.y,
-                frame.width as i32,
-                frame.height as i32,
-                flags,
-            )
-            .map_err(|e| WindowManagerError::MoveError(format!("SetWindowPos failed: {}", e)))?;
+        // The move may have landed the window on a monitor with a different
+        // scale factor, which changes both the border width and — via
+        // WM_DPICHANGED — the size the app settles on. Re-measure and correct
+        // once; a no-op SetWindowPos is cheap when nothing changed.
+        let settled = self.frame_offsets(hwnd);
+        if settled != offsets {
+            self.apply_frame(hwnd, frame, settled)?;
         }
 
         Ok(())
