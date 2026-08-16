@@ -1,6 +1,6 @@
 #![cfg(target_os = "linux")]
 
-use super::{Display, Rect, Result, Window, WindowHandle, WindowManagerError, WindowManagerTrait};
+use super::{Display, Rect, Result, Window, WindowManagerError, WindowManagerTrait};
 
 pub struct LinuxManager;
 

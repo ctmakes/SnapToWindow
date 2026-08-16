@@ -26,6 +26,10 @@ pub enum WindowManagerError {
 
     #[error("No adjacent display in that direction")]
     NoAdjacentDisplay,
+
+    #[error("Window management is not supported on this platform yet")]
+    #[allow(dead_code)] // Only constructed by the Linux stub.
+    PlatformNotSupported,
 }
 
 pub type Result<T> = std::result::Result<T, WindowManagerError>;
