@@ -144,6 +144,9 @@ Will support both X11 and Wayland compositors through conditional compilation.
 
 ## Changelog
 
+### v0.1.22
+- Security: updated rustls to 0.23.45 (RUSTSEC-2026-0285), used by the auto-updater's HTTPS connections
+
 ### v0.1.21
 - Fixed snapped windows landing inset from screen edges on Windows — the invisible resize border is now measured per window and compensated for, so halves and quarters sit flush and share no gutter
 - Cross-monitor moves stay correct when the border width or DPI changes between displays
