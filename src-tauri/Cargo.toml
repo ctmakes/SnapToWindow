@@ -35,7 +35,6 @@ windows = { version = "0.62", features = [
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.25"
 core-foundation = "0.10"
-objc = "0.2"
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = ["NSArray", "NSDictionary", "NSString", "NSValue", "NSGeometry"] }
 objc2-app-kit = { version = "0.3", features = ["NSScreen", "NSGraphics"] }

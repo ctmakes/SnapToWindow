@@ -1,6 +1,3 @@
-#[cfg(target_os = "macos")]
-extern crate objc;
-
 mod commands;
 mod config;
 mod hotkeys;
