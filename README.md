@@ -68,7 +68,7 @@ src-tauri/
 | Frontend | TypeScript, React, Tailwind CSS |
 | Backend | Rust, Tauri 2.0 |
 | Windows API | windows-rs (Win32) |
-| macOS API | core-foundation, core-graphics, cocoa, objc |
+| macOS API | core-foundation, core-graphics, objc2, objc2-foundation, objc2-app-kit |
 | Build | Cargo, npm, Vite |
 
 ## Development
@@ -143,6 +143,13 @@ Will support both X11 and Wayland compositors through conditional compilation.
 - [x] Launch at Login
 
 ## Changelog
+
+### v0.1.23
+- Fixed windows jumping back to the previous monitor on macOS after moving a Desktop (Space) to another display — the current display is now the one the window overlaps most, falling back to the nearest, instead of whichever contains the window centre or else the primary display
+- Security: updated the auto-updater's zip extraction to zip 9 (RUSTSEC-2026-0367, RUSTSEC-2026-0368, RUSTSEC-2026-0369), plus rustls 0.23.46, rustls-webpki 0.103.16, webpki-root-certs 1.0.11 and tokio 1.54.1
+- Security: updated Vite to 8.3.5 and source-map-js to 1.2.2 (dev tooling only)
+- Upgraded Tauri to 2.12 and all Tauri plugins, with the npm packages kept in step with the Rust crates
+- Upgraded TypeScript 7, React 19.3, windows-rs 0.62, core-graphics 0.25, thiserror 2 and dirs 7
 
 ### v0.1.22
 - Security: updated rustls to 0.23.45 (RUSTSEC-2026-0285), used by the auto-updater's HTTPS connections
