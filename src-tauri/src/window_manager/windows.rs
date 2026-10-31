@@ -3,7 +3,8 @@
 use super::{Display, Rect, Result, Window, WindowHandle, WindowManagerError, WindowManagerTrait};
 use std::mem;
 use std::ptr;
-use windows::Win32::Foundation::{BOOL, HWND, LPARAM, RECT, TRUE};
+use windows::core::BOOL;
+use windows::Win32::Foundation::{HWND, LPARAM, RECT, TRUE};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
 use windows::Win32::Graphics::Gdi::{
     EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFOEXW,
@@ -131,7 +132,7 @@ impl WindowsManager {
         unsafe {
             let flags: SET_WINDOW_POS_FLAGS = SWP_NOZORDER | SWP_NOACTIVATE;
 
-            SetWindowPos(hwnd, HWND_TOP, x, y, width.max(1), height.max(1), flags)
+            SetWindowPos(hwnd, Some(HWND_TOP), x, y, width.max(1), height.max(1), flags)
                 .map_err(|e| WindowManagerError::MoveError(format!("SetWindowPos failed: {}", e)))?;
         }
 
@@ -279,7 +280,7 @@ impl WindowManagerTrait for WindowsManager {
 
         unsafe {
             let result = EnumDisplayMonitors(
-                HDC::default(),
+                None,
                 None,
                 Some(enum_callback),
                 LPARAM(&mut collector as *mut _ as isize),

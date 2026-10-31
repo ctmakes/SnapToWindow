@@ -47,7 +47,7 @@ fn is_windows_dark_mode() -> bool {
         let mut key = windows::Win32::System::Registry::HKEY::default();
         let subkey = w!("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize");
 
-        if RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_READ, &mut key).is_ok() {
+        if RegOpenKeyExW(HKEY_CURRENT_USER, subkey, None, KEY_READ, &mut key).is_ok() {
             let value_name = w!("SystemUsesLightTheme");
             let mut data: u32 = 1; // Default to light theme
             let mut data_size = std::mem::size_of::<u32>() as u32;
@@ -686,7 +686,7 @@ pub fn start_theme_watcher(app: AppHandle) {
             unsafe {
                 let mut key = windows::Win32::System::Registry::HKEY::default();
 
-                if RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_NOTIFY, &mut key).is_ok() {
+                if RegOpenKeyExW(HKEY_CURRENT_USER, subkey, None, KEY_NOTIFY, &mut key).is_ok() {
                     // Wait for a change to the registry key (blocking call)
                     let result = RegNotifyChangeKeyValue(
                         key,
