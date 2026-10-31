@@ -41,13 +41,6 @@ struct CGSize {
     height: f64,
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-struct CGRect {
-    origin: CGPoint,
-    size: CGSize,
-}
-
 #[link(name = "ApplicationServices", kind = "framework")]
 unsafe extern "C" {
     fn AXUIElementCreateSystemWide() -> AXUIElementRef;
@@ -64,11 +57,6 @@ unsafe extern "C" {
     ) -> AXError;
     fn AXValueCreate(value_type: AXValueType, value: *const c_void) -> AXValueRef;
     fn AXValueGetValue(value: AXValueRef, value_type: AXValueType, value_out: *mut c_void) -> bool;
-}
-
-#[link(name = "CoreGraphics", kind = "framework")]
-unsafe extern "C" {
-    fn CGRectContainsPoint(rect: CGRect, point: CGPoint) -> bool;
 }
 
 #[link(name = "AppKit", kind = "framework")]
@@ -492,38 +480,9 @@ impl WindowManagerTrait for MacOSManager {
     }
 
     fn get_current_display(&self) -> Result<Display> {
-        // Get the focused window position to determine which display it's on
         let window = self.get_focused_window()?;
-        let window_center = CGPoint {
-            x: window.frame.x as f64 + (window.frame.width / 2) as f64,
-            y: window.frame.y as f64 + (window.frame.height / 2) as f64,
-        };
-
         let displays = self.get_all_displays()?;
-
-        // Find the display containing the window center
-        for display in &displays {
-            let bounds = CGRect {
-                origin: CGPoint {
-                    x: display.bounds.x as f64,
-                    y: display.bounds.y as f64,
-                },
-                size: CGSize {
-                    width: display.bounds.width as f64,
-                    height: display.bounds.height as f64,
-                },
-            };
-
-            if unsafe { CGRectContainsPoint(bounds, window_center) } {
-                return Ok(display.clone());
-            }
-        }
-
-        // Fallback to primary display
-        displays
-            .into_iter()
-            .find(|d| d.is_primary)
-            .ok_or(WindowManagerError::DisplayError)
+        display_for_frame(&window.frame, displays).ok_or(WindowManagerError::DisplayError)
     }
 
     fn get_all_displays(&self) -> Result<Vec<Display>> {
@@ -568,5 +527,91 @@ impl WindowManagerTrait for MacOSManager {
 impl Default for MacOSManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Pick the display a window is on: the one it overlaps most, otherwise the
+/// one nearest its centre (like Windows' `MONITOR_DEFAULTTONEAREST`).
+///
+/// Checking only whether the centre lies inside a display is not enough. When
+/// a Desktop (Space) is moved to another monitor, macOS can leave its windows
+/// larger than, or hanging off, the new screen, so the centre may sit outside
+/// every display. Falling back to the primary display then snapped the window
+/// back onto the old monitor and its other Desktop.
+fn display_for_frame(frame: &Rect, displays: Vec<Display>) -> Option<Display> {
+    let overlap = |d: &Rect| -> i64 {
+        let left = frame.x.max(d.x) as i64;
+        let top = frame.y.max(d.y) as i64;
+        let right = (frame.x as i64 + frame.width as i64).min(d.x as i64 + d.width as i64);
+        let bottom = (frame.y as i64 + frame.height as i64).min(d.y as i64 + d.height as i64);
+        (right - left).max(0) * (bottom - top).max(0)
+    };
+
+    let cx = frame.x as f64 + frame.width as f64 / 2.0;
+    let cy = frame.y as f64 + frame.height as f64 / 2.0;
+    let distance_sq = |d: &Rect| -> f64 {
+        let dx = (d.x as f64 - cx).max(0.0).max(cx - (d.x as f64 + d.width as f64));
+        let dy = (d.y as f64 - cy).max(0.0).max(cy - (d.y as f64 + d.height as f64));
+        dx * dx + dy * dy
+    };
+
+    if let Some(best) = displays
+        .iter()
+        .filter(|d| overlap(&d.bounds) > 0)
+        .max_by_key(|d| overlap(&d.bounds))
+    {
+        return Some(best.clone());
+    }
+
+    displays
+        .into_iter()
+        .min_by(|a, b| distance_sq(&a.bounds).total_cmp(&distance_sq(&b.bounds)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn display(name: &str, x: i32, y: i32, w: u32, h: u32, primary: bool) -> Display {
+        Display {
+            name: name.into(),
+            bounds: Rect::new(x, y, w, h),
+            work_area: Rect::new(x, y, w, h),
+            is_primary: primary,
+        }
+    }
+
+    // MacBook (primary) on the left, larger external monitor on the right.
+    fn setup() -> Vec<Display> {
+        vec![
+            display("laptop", 0, 0, 1512, 982, true),
+            display("external", 1512, -400, 2560, 1440, false),
+        ]
+    }
+
+    #[test]
+    fn window_inside_external_picks_external() {
+        let frame = Rect::new(1700, -300, 800, 600);
+        assert_eq!(display_for_frame(&frame, setup()).unwrap().name, "external");
+    }
+
+    #[test]
+    fn window_hanging_off_external_with_centre_outside_picks_external() {
+        // Centre is below the external's bottom edge (y = 1040) and right of the
+        // laptop, so no display contains it. The old code fell back to the laptop.
+        let frame = Rect::new(2000, 700, 1200, 1000);
+        assert_eq!(display_for_frame(&frame, setup()).unwrap().name, "external");
+    }
+
+    #[test]
+    fn window_spanning_both_picks_larger_overlap() {
+        let frame = Rect::new(1300, 0, 1000, 600);
+        assert_eq!(display_for_frame(&frame, setup()).unwrap().name, "external");
+    }
+
+    #[test]
+    fn window_off_every_screen_picks_nearest() {
+        let frame = Rect::new(5000, 0, 400, 300);
+        assert_eq!(display_for_frame(&frame, setup()).unwrap().name, "external");
     }
 }

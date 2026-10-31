@@ -50,9 +50,7 @@ pub struct Display {
     pub bounds: Rect,
     /// The usable work area (excluding taskbar/dock/menubar).
     pub work_area: Rect,
-    /// Read on macOS as the fallback when no display contains the window
-    /// centre. Windows relies on `MONITOR_DEFAULTTONEAREST` instead.
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    #[allow(dead_code)]
     pub is_primary: bool,
 }
 
