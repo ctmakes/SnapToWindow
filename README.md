@@ -144,6 +144,9 @@ Will support both X11 and Wayland compositors through conditional compilation.
 
 ## Changelog
 
+### v0.1.24
+- Fixed keyboard shortcuts firing twice (on key press and again on release) — moving a window to the next or previous display sent it back to the original monitor on Windows and caused a brief flash on macOS (#3)
+
 ### v0.1.23
 - Fixed windows jumping back to the previous monitor on macOS after moving a Desktop (Space) to another display — the current display is now the one the window overlaps most, falling back to the nearest, instead of whichever contains the window centre or else the primary display
 - Security: updated the auto-updater's zip extraction to zip 9 (RUSTSEC-2026-0367, RUSTSEC-2026-0368, RUSTSEC-2026-0369), plus rustls 0.23.46, rustls-webpki 0.103.16, webpki-root-certs 1.0.11 and tokio 1.54.1
