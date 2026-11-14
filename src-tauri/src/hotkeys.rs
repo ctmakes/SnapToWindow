@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::window_manager::{DisplayDirection, SnapPosition, WindowManager};
 use tauri::AppHandle;
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load()?;
@@ -29,7 +29,10 @@ pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error
         let shortcut: Shortcut = shortcut_str.parse()?;
         let pos = position.clone();
 
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+            if event.state != ShortcutState::Pressed {
+                return;
+            }
             let manager = WindowManager::new();
             if let Err(e) = manager.snap_to(pos.clone()) {
                 eprintln!("Failed to snap window: {}", e);
@@ -47,7 +50,10 @@ pub fn register_hotkeys(app: &AppHandle) -> Result<(), Box<dyn std::error::Error
         let shortcut: Shortcut = shortcut_str.parse()?;
         let dir = direction.clone();
 
-        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
+        app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+            if event.state != ShortcutState::Pressed {
+                return;
+            }
             let manager = WindowManager::new();
             if let Err(e) = manager.move_to_display(dir.clone()) {
                 eprintln!("Failed to move window to display: {}", e);
